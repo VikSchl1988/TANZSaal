@@ -9,13 +9,15 @@ import { Cockpit } from "./tabs/Cockpit";
 import { Auswertung } from "./tabs/Auswertung";
 import { Bibliothek } from "./tabs/Bibliothek";
 import { Einstellungen } from "./tabs/Einstellungen";
+import { Vorbilder } from "./tabs/Vorbilder";
 
-type TabId = "profil" | "post" | "meta" | "google" | "cockpit" | "auswertung" | "bibliothek" | "einstellungen";
+type TabId = "profil" | "post" | "meta" | "google" | "cockpit" | "auswertung" | "bibliothek" | "einstellungen" | "vorbilder";
 
 const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = [
   { id: "post", label: "Post-Studio", icon: "◻", group: "Erstellen" },
   { id: "meta", label: "Meta Ads", icon: "◉" },
   { id: "google", label: "Google Ads", icon: "▲" },
+  { id: "vorbilder", label: "Vorbilder", icon: "◎", group: "Lernen" },
   { id: "cockpit", label: "PPC-Cockpit", icon: "◆", group: "Steuern" },
   { id: "auswertung", label: "Auswertung", icon: "▤" },
   { id: "bibliothek", label: "Bibliothek", icon: "☰", group: "Ablage" },
@@ -95,6 +97,7 @@ export function App() {
           {tab === "post" && <PostStudio data={data} refresh={refresh} />}
           {tab === "meta" && <MetaAds data={data} refresh={refresh} />}
           {tab === "google" && <GoogleAds data={data} refresh={refresh} />}
+          {tab === "vorbilder" && <Vorbilder data={data} refresh={refresh} />}
           {tab === "cockpit" && <Cockpit data={data} refresh={refresh} />}
           {tab === "auswertung" && <Auswertung data={data} refresh={refresh} />}
           {tab === "bibliothek" && <Bibliothek data={data} refresh={refresh} />}

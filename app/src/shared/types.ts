@@ -58,7 +58,7 @@ export const DEFAULT_VALUE_SETTINGS: ValueSettings = {
   conversionTrackingWorks: false,
 };
 
-export type LibraryKind = "post" | "meta" | "google" | "pmax" | "auswertung";
+export type LibraryKind = "post" | "meta" | "google" | "pmax" | "auswertung" | "stilprofil";
 
 export interface LibraryItem {
   id: string;
@@ -74,11 +74,31 @@ export interface LibraryItem {
   notes?: string;
 }
 
+export interface StyleProfile {
+  /** Woher das Material stammt - Werbebibliothek, eingeworfener Text, oder beides */
+  sources: string[];
+  createdAt: string;
+  /** Muster, die bei den Vorbildern wiederkehren */
+  patterns: Array<{ pattern: string; evidence: string; useForUs: string }>;
+  /** Haken-Typen, nach Haeufigkeit */
+  hooks: string[];
+  /** Wie die Angebote aufgebaut sind */
+  offerLogic: string[];
+  /** Was auffaellig fehlt - die Luecke, in die TANZSaal stossen kann */
+  gaps: string[];
+  /** Konkrete Ideen fuer TANZSaal, keine Kopien */
+  ideas: Array<{ idea: string; channel: string; why: string }>;
+  /** Woran man sich NICHT orientieren sollte */
+  avoid: string[];
+  notes: string;
+}
+
 export interface AppData {
   profile: Profile;
   value: ValueSettings;
   library: LibraryItem[];
   checkedAccountItems: string[];
+  styleProfile: StyleProfile | null;
   version: number;
 }
 
@@ -87,6 +107,7 @@ export const EMPTY_APP_DATA: AppData = {
   value: DEFAULT_VALUE_SETTINGS,
   library: [],
   checkedAccountItems: [],
+  styleProfile: null,
   version: 1,
 };
 

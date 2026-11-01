@@ -1,4 +1,14 @@
-import type { AppData, GenerateResponse, LibraryItem, Profile, ValueSettings } from "../shared/types";
+import type { AppData, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { AdLibraryQuery, AdLibraryAd } from "../shared/adlibrary";
+
+export interface AdLibraryOutcome {
+  ok: boolean;
+  ads?: AdLibraryAd[];
+  cursor?: string | null;
+  reducedFields?: boolean;
+  error?: string;
+  hint?: string;
+}
 
 export interface StudioApi {
   getData(): Promise<AppData>;
@@ -8,6 +18,11 @@ export interface StudioApi {
   addLibraryItem(item: LibraryItem): Promise<AppData>;
   updateLibraryItem(id: string, changes: Partial<LibraryItem>): Promise<AppData>;
   removeLibraryItem(id: string): Promise<AppData>;
+  saveStyleProfile(styleProfile: StyleProfile | null): Promise<AppData>;
+  searchAdLibrary(query: AdLibraryQuery): Promise<AdLibraryOutcome>;
+  hasSecret(name: string): Promise<boolean>;
+  saveSecret(name: string, value: string): Promise<{ ok: boolean; error?: string }>;
+  deleteSecret(name: string): Promise<boolean>;
   hasApiKey(): Promise<boolean>;
   saveApiKey(key: string): Promise<{ ok: boolean; error?: string }>;
   deleteApiKey(): Promise<boolean>;

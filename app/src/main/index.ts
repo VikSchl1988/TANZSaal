@@ -3,7 +3,9 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { ClaudeError, extractJson, generate, MODEL } from "./claude";
-import { deleteApiKey, hasApiKey, loadApiKey, saveApiKey } from "./secrets";
+import { deleteApiKey, deleteSecret, hasApiKey, hasSecret, loadApiKey, loadSecret, saveApiKey, saveSecret, type SecretName } from "./secrets";
+import { fetchAds } from "./adlibrary";
+import type { AdLibraryQuery } from "../shared/adlibrary";
 import * as store from "./store";
 import {
   buildAnalysisPrompt,
@@ -11,12 +13,14 @@ import {
   buildMetaPrompt,
   buildPmaxPrompt,
   buildPostPrompt,
+  buildStyleProfilePrompt,
   buildSystemPrompt,
   type GoogleBrief,
   type MetaBrief,
   type PostBrief,
+  type StyleBrief,
 } from "../shared/prompts";
-import type { AppData, GenerateResponse, LibraryItem, Profile, ValueSettings } from "../shared/types";
+import type { AppData, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
 import { calculateBreakEven, recommendStructure } from "../shared/ppc";
 
 let mainWindow: BrowserWindow | null = null;
@@ -108,6 +112,28 @@ function registerIpc(): void {
   );
   ipcMain.handle("library:remove", (_e, id: string): AppData => store.removeLibraryItem(id));
 
+  ipcMain.handle("data:saveStyleProfile", (_e, styleProfile: StyleProfile | null): AppData =>
+    store.patch({ styleProfile }),
+  );
+
+  ipcMain.handle("adlibrary:search", async (_e, query: AdLibraryQuery) =>
+    fetchAds(query, loadSecret("metaAdLibrary")),
+  );
+
+  ipcMain.handle("secret:has", (_e, name: SecretName): boolean => hasSecret(name));
+  ipcMain.handle("secret:save", (_e, name: SecretName, value: string): { ok: boolean; error?: string } => {
+    try {
+      saveSecret(name, value);
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err instanceof Error ? err.message : "Unbekannter Fehler." };
+    }
+  });
+  ipcMain.handle("secret:delete", (_e, name: SecretName): boolean => {
+    deleteSecret(name);
+    return true;
+  });
+
   ipcMain.handle("key:has", (): boolean => hasApiKey());
   ipcMain.handle("key:save", (_e, key: string): { ok: boolean; error?: string } => {
     try {
@@ -162,7 +188,7 @@ function registerIpc(): void {
   ipcMain.handle("claude:generate", async (event, payload: { kind: string; brief: Record<string, unknown> }): Promise<GenerateResponse> => {
     const data = store.load();
     const apiKey = loadApiKey();
-    const system = buildSystemPrompt(data.profile, data.value);
+    const system = buildSystemPrompt(data.profile, data.value, data.styleProfile);
     const breakEven = calculateBreakEven(data.value);
     const structure = recommendStructure(data.profile.monthlyAdBudgetEur, data.value.conversionTrackingWorks);
 
@@ -191,6 +217,10 @@ function registerIpc(): void {
           data.profile,
           structure.pmaxAdvisable,
         );
+        break;
+      case "stilprofil":
+        user = buildStyleProfilePrompt(payload.brief as unknown as StyleBrief);
+        effort = "high";
         break;
       case "auswertung": {
         const brief = payload.brief as { csv?: string; context?: string };

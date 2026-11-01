@@ -12,6 +12,7 @@ const KIND_LABEL: Record<LibraryKind, string> = {
   google: "Google Suche",
   pmax: "Performance Max",
   auswertung: "Auswertung",
+  stilprofil: "Stilprofil",
 };
 
 const STATUS: Array<{ value: LibraryItem["status"]; label: string }> = [

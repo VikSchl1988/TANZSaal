@@ -5,7 +5,8 @@
  */
 
 import { contextBridge, ipcRenderer } from "electron";
-import type { AppData, GenerateResponse, LibraryItem, Profile, ValueSettings } from "../shared/types";
+import type { AppData, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { AdLibraryQuery } from "../shared/adlibrary";
 
 const api = {
   getData: (): Promise<AppData> => ipcRenderer.invoke("data:get"),
@@ -17,6 +18,16 @@ const api = {
   updateLibraryItem: (id: string, changes: Partial<LibraryItem>): Promise<AppData> =>
     ipcRenderer.invoke("library:update", id, changes),
   removeLibraryItem: (id: string): Promise<AppData> => ipcRenderer.invoke("library:remove", id),
+
+  saveStyleProfile: (styleProfile: StyleProfile | null): Promise<AppData> =>
+    ipcRenderer.invoke("data:saveStyleProfile", styleProfile),
+
+  searchAdLibrary: (query: AdLibraryQuery): Promise<unknown> => ipcRenderer.invoke("adlibrary:search", query),
+
+  hasSecret: (name: string): Promise<boolean> => ipcRenderer.invoke("secret:has", name),
+  saveSecret: (name: string, value: string): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke("secret:save", name, value),
+  deleteSecret: (name: string): Promise<boolean> => ipcRenderer.invoke("secret:delete", name),
 
   hasApiKey: (): Promise<boolean> => ipcRenderer.invoke("key:has"),
   saveApiKey: (key: string): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke("key:save", key),

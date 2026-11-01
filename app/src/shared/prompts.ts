@@ -3,7 +3,7 @@
  * .claude/agents/werbe-agent.md — ein Betrieb, eine Haltung, zwei Zugänge.
  */
 
-import type { Profile, ValueSettings } from "./types";
+import type { Profile, StyleProfile, ValueSettings } from "./types";
 import { META_LIMITS, GOOGLE_SEARCH_LIMITS, GOOGLE_PMAX_LIMITS } from "./limits";
 import { flattenNegatives } from "./negatives";
 
@@ -18,7 +18,7 @@ Harte Regeln:
 - Keine Emoji-Teppiche: hoechstens ein bis drei pro Text, nie in Anzeigentiteln.
 `.trim();
 
-export function buildSystemPrompt(profile: Profile, value?: ValueSettings): string {
+export function buildSystemPrompt(profile: Profile, value?: ValueSettings, style?: StyleProfile | null): string {
   const p = profile;
   const lines: string[] = [];
   lines.push(
@@ -43,6 +43,18 @@ export function buildSystemPrompt(profile: Profile, value?: ValueSettings): stri
   if (value && value.firstSaleEur > 0) {
     lines.push(`- Kursgebuehr: ${value.firstSaleEur} EUR, Deckungsbeitrag ${value.marginPercent} %`);
   }
+  if (style && (style.patterns.length > 0 || style.hooks.length > 0)) {
+    lines.push("");
+    lines.push("Gelernt von erfolgreichen Vorbildern (Muster, nicht Vorlagen):");
+    for (const p of style.patterns.slice(0, 8)) lines.push(`- ${p.pattern} -> fuer uns: ${p.useForUs}`);
+    if (style.hooks.length) lines.push(`- Haken, die dort funktionieren: ${style.hooks.slice(0, 8).join("; ")}`);
+    if (style.gaps.length) lines.push(`- Luecken, die niemand besetzt: ${style.gaps.slice(0, 5).join("; ")}`);
+    if (style.avoid.length) lines.push(`- Bewusst NICHT nachmachen: ${style.avoid.slice(0, 5).join("; ")}`);
+    lines.push(
+      "Diese Muster sind Anregung, keine Vorlage. Formuliere eigenstaendig fuer diesen Betrieb; uebernimm keine fremden Formulierungen, keine fremden Markennamen und keine fremden Versprechen.",
+    );
+  }
+
   lines.push("");
   lines.push(GUARDRAILS);
   lines.push("");
@@ -210,4 +222,44 @@ export function buildAnalysisPrompt(tableCsv: string, context: string): string {
     "JSON-Form:",
     `{"findings":["","",""],"actions":[{"action":"","expectedEffect":""}],"turnOff":[""],"dataQuality":""}`,
   ].join("\n");
+}
+
+
+/* --------------------------- Vorbilder --------------------------- */
+
+export interface StyleBrief {
+  /** Aufbereitete Anzeigen aus der Werbebibliothek */
+  adsText: string;
+  /** Vom Betrieb selbst eingeworfenes Material: Captions, Notizen */
+  pastedText: string;
+  /** Welche Art von Vorbildern angeschaut wurde */
+  cohort: string;
+}
+
+export function buildStyleProfilePrompt(brief: StyleBrief): string {
+  return [
+    "Werte das folgende Werbematerial anderer Betriebe aus und leite daraus ein Stilprofil ab.",
+    brief.cohort ? `Art der Vorbilder: ${brief.cohort}` : "",
+    "",
+    brief.adsText ? "Anzeigen aus der Meta-Werbebibliothek (mit Laufzeit - lange Laufzeit heisst, die Anzeige verdient vermutlich Geld):" : "",
+    brief.adsText ? brief.adsText.slice(0, 18000) : "",
+    "",
+    brief.pastedText ? "Zusaetzlich eingeworfenes Material:" : "",
+    brief.pastedText ? brief.pastedText.slice(0, 12000) : "",
+    "",
+    "Arbeite heraus, WIE die Texte gebaut sind, nicht WAS darin steht. Gewichte Anzeigen mit langer Laufzeit deutlich staerker als frische.",
+    "patterns: wiederkehrende Bauweisen. Je Eintrag das Muster, ein Beleg in wenigen Worten, und was TANZSaal konkret daraus macht.",
+    "hooks: die Haken-Typen nach Haeufigkeit, in eigenen Worten benannt.",
+    "offerLogic: wie die Angebote geschnuert sind (Einstiegspreis, Probestunde, Paketlogik, Verknappung, Garantie).",
+    "gaps: was auffaellig fehlt. Das ist die Luecke, in die TANZSaal stossen kann.",
+    "ideas: fuenf bis acht konkrete Ideen fuer TANZSaal mit Kanal und Begruendung. Eigenstaendig formuliert, keine Umschreibung fremder Texte.",
+    "avoid: was man hier bewusst NICHT nachmachen sollte, mit kurzer Begruendung.",
+    "",
+    "Wichtig: Uebernimm keine fremden Formulierungen woertlich, keine fremden Markennamen und keine fremden Versprechen. Wenn das Material zu duenn fuer eine belastbare Aussage ist, schreibe das in notes statt zu raten.",
+    "",
+    "JSON-Form:",
+    '{"patterns":[{"pattern":"","evidence":"","useForUs":""}],"hooks":[""],"offerLogic":[""],"gaps":[""],"ideas":[{"idea":"","channel":"","why":""}],"avoid":[""],"notes":""}',
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
