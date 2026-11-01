@@ -263,3 +263,42 @@ export function buildStyleProfilePrompt(brief: StyleBrief): string {
     .filter(Boolean)
     .join("\n");
 }
+
+
+/* -------------------------- Kommentare -------------------------- */
+
+export interface CommentsBrief {
+  /** Die Kommentare, einer je Zeile oder durch Leerzeilen getrennt */
+  raw: string;
+  /** Worunter sie stehen - gibt den noetigen Zusammenhang */
+  postContext: string;
+}
+
+export function buildCommentsPrompt(brief: CommentsBrief): string {
+  return [
+    "Sortiere die folgenden Kommentare und schreibe zu jedem einen Antwortentwurf.",
+    brief.postContext ? `Die Kommentare stehen unter: ${brief.postContext}` : "",
+    "",
+    "Kommentare:",
+    brief.raw.slice(0, 12000),
+    "",
+    "Regeln fuer die Antworten:",
+    "- Kurz. Zwei Saetze reichen fast immer. Niemand liest unter einem Post einen Absatz.",
+    "- In der Anrede und Tonalitaet des Betriebs, wie oben beschrieben.",
+    "- Preisfragen beantwortest du nur mit Preisen aus dem Profil. Steht der Preis dort nicht, schreibe [[BITTE PRUEFEN: Preis fehlt]] und schlage vor, die Person in die Direktnachricht zu holen.",
+    "- Terminfragen ebenso: nur Termine aus dem Profil, nichts erfinden.",
+    "- Bei Beschwerden: den Punkt anerkennen, nicht rechtfertigen, keine Schuldzuweisung, und einen Weg anbieten (Anruf oder Direktnachricht). Keine oeffentliche Diskussion ueber Einzelheiten.",
+    "- Bei Spam, Beleidigung oder offensichtlichem Unsinn: channel auf nicht_antworten setzen und in reason begruenden. Nicht fuettern.",
+    "- Bei gesundheitlichen Fragen (Rücken, Schwangerschaft, Verletzung) keine Zusagen und keine Einschaetzung geben, sondern zum persoenlichen Gespraech einladen.",
+    "- needsHuman auf true, wenn die Antwort rechtliche, gesundheitliche oder vertragliche Fragen beruehrt, wenn es eine Beschwerde ist, oder wenn du dir unsicher bist.",
+    "",
+    "Kategorien: lob, frage, preisfrage, terminfrage, beschwerde, spam, sonstiges.",
+    "channel: oeffentlich, direktnachricht oder nicht_antworten.",
+    "In notes ein Satz, falls dir ein Muster auffaellt - etwa dass dieselbe Frage staendig kommt und in die Beschreibung des Profils gehoert.",
+    "",
+    "JSON-Form:",
+    '{"replies":[{"author":"","comment":"","category":"frage","reply":"","channel":"oeffentlich","needsHuman":false,"reason":""}],"notes":""}',
+  ]
+    .filter(Boolean)
+    .join("\n");
+}

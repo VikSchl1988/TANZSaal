@@ -34,6 +34,10 @@ export function load(): AppData {
       value: { ...EMPTY_APP_DATA.value, ...(parsed.value ?? {}) },
       library: Array.isArray(parsed.library) ? parsed.library : [],
       checkedAccountItems: Array.isArray(parsed.checkedAccountItems) ? parsed.checkedAccountItems : [],
+      usageLog: Array.isArray(parsed.usageLog) ? parsed.usageLog : [],
+      spend: Array.isArray(parsed.spend) ? parsed.spend : [],
+      results: Array.isArray(parsed.results) ? parsed.results : [],
+      settings: { ...EMPTY_APP_DATA.settings, ...(parsed.settings ?? {}) },
     };
     return cache;
   } catch (err) {

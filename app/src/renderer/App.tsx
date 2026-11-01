@@ -10,17 +10,23 @@ import { Auswertung } from "./tabs/Auswertung";
 import { Bibliothek } from "./tabs/Bibliothek";
 import { Einstellungen } from "./tabs/Einstellungen";
 import { Vorbilder } from "./tabs/Vorbilder";
+import { Kosten } from "./tabs/Kosten";
+import { Kommentare } from "./tabs/Kommentare";
+import { Plan } from "./tabs/Plan";
 
-type TabId = "profil" | "post" | "meta" | "google" | "cockpit" | "auswertung" | "bibliothek" | "einstellungen" | "vorbilder";
+type TabId = "profil" | "post" | "meta" | "google" | "cockpit" | "auswertung" | "bibliothek" | "einstellungen" | "vorbilder" | "kosten" | "kommentare" | "plan";
 
 const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = [
   { id: "post", label: "Post-Studio", icon: "◻", group: "Erstellen" },
   { id: "meta", label: "Meta Ads", icon: "◉" },
   { id: "google", label: "Google Ads", icon: "▲" },
+  { id: "kommentare", label: "Kommentare", icon: "✉" },
   { id: "vorbilder", label: "Vorbilder", icon: "◎", group: "Lernen" },
   { id: "cockpit", label: "PPC-Cockpit", icon: "◆", group: "Steuern" },
   { id: "auswertung", label: "Auswertung", icon: "▤" },
-  { id: "bibliothek", label: "Bibliothek", icon: "☰", group: "Ablage" },
+  { id: "kosten", label: "Kosten", icon: "€" },
+  { id: "plan", label: "Plan", icon: "▦", group: "Ablage" },
+  { id: "bibliothek", label: "Bibliothek", icon: "☰" },
   { id: "profil", label: "Profil", icon: "◈" },
   { id: "einstellungen", label: "Einstellungen", icon: "⚙" },
 ];
@@ -98,6 +104,9 @@ export function App() {
           {tab === "meta" && <MetaAds data={data} refresh={refresh} />}
           {tab === "google" && <GoogleAds data={data} refresh={refresh} />}
           {tab === "vorbilder" && <Vorbilder data={data} refresh={refresh} />}
+          {tab === "kommentare" && <Kommentare data={data} refresh={refresh} />}
+          {tab === "kosten" && <Kosten data={data} refresh={refresh} />}
+          {tab === "plan" && <Plan data={data} refresh={refresh} />}
           {tab === "cockpit" && <Cockpit data={data} refresh={refresh} />}
           {tab === "auswertung" && <Auswertung data={data} refresh={refresh} />}
           {tab === "bibliothek" && <Bibliothek data={data} refresh={refresh} />}

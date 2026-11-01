@@ -13,6 +13,7 @@ const KIND_LABEL: Record<LibraryKind, string> = {
   pmax: "Performance Max",
   auswertung: "Auswertung",
   stilprofil: "Stilprofil",
+  kommentare: "Kommentare",
 };
 
 const STATUS: Array<{ value: LibraryItem["status"]; label: string }> = [

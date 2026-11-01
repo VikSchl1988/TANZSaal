@@ -1,4 +1,5 @@
-import type { AppData, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { ResultEntry, SpendEntry } from "../shared/costs";
 import type { AdLibraryQuery, AdLibraryAd } from "../shared/adlibrary";
 
 export interface AdLibraryOutcome {
@@ -15,6 +16,11 @@ export interface StudioApi {
   saveProfile(profile: Profile): Promise<AppData>;
   saveValue(value: ValueSettings): Promise<AppData>;
   toggleAccountCheck(id: string): Promise<AppData>;
+  saveSettings(settings: AppSettings): Promise<AppData>;
+  addSpend(entry: SpendEntry): Promise<AppData>;
+  removeSpend(id: string): Promise<AppData>;
+  addResult(entry: ResultEntry): Promise<AppData>;
+  removeResult(id: string): Promise<AppData>;
   addLibraryItem(item: LibraryItem): Promise<AppData>;
   updateLibraryItem(id: string, changes: Partial<LibraryItem>): Promise<AppData>;
   removeLibraryItem(id: string): Promise<AppData>;

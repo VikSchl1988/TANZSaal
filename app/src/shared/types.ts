@@ -1,5 +1,9 @@
 /** Gemeinsame Datentypen für Main-Prozess und Oberfläche. */
 
+import type { ResultEntry, SpendEntry, UsageEntry } from "./costs";
+
+export type { ResultEntry, SpendEntry, UsageEntry };
+
 export interface Profile {
   businessName: string;
   businessKind: string;
@@ -58,7 +62,7 @@ export const DEFAULT_VALUE_SETTINGS: ValueSettings = {
   conversionTrackingWorks: false,
 };
 
-export type LibraryKind = "post" | "meta" | "google" | "pmax" | "auswertung" | "stilprofil";
+export type LibraryKind = "post" | "meta" | "google" | "pmax" | "auswertung" | "stilprofil" | "kommentare";
 
 export interface LibraryItem {
   id: string;
@@ -93,12 +97,24 @@ export interface StyleProfile {
   notes: string;
 }
 
+export interface AppSettings {
+  /** Umrechnungskurs Dollar in Euro fuer die Kostenrechnung. Selbst pflegen - ein
+   *  fest verdrahteter Kurs waere eine falsche Zahl in einer Kostenrechnung. */
+  usdToEur: number;
+}
+
+export const DEFAULT_SETTINGS: AppSettings = { usdToEur: 0.92 };
+
 export interface AppData {
   profile: Profile;
   value: ValueSettings;
   library: LibraryItem[];
   checkedAccountItems: string[];
   styleProfile: StyleProfile | null;
+  usageLog: UsageEntry[];
+  spend: SpendEntry[];
+  results: ResultEntry[];
+  settings: AppSettings;
   version: number;
 }
 
@@ -108,6 +124,10 @@ export const EMPTY_APP_DATA: AppData = {
   library: [],
   checkedAccountItems: [],
   styleProfile: null,
+  usageLog: [],
+  spend: [],
+  results: [],
+  settings: DEFAULT_SETTINGS,
   version: 1,
 };
 

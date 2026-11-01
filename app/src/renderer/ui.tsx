@@ -186,12 +186,14 @@ export function Empty({ children }: { children: ReactNode }) {
 }
 
 export function Kpi({ label, value, unit, strong, title }: { label: string; value: string | number; unit?: string; strong?: boolean; title?: string }) {
+  // Bei fehlendem Wert faellt die Einheit weg - "\u2013 \u20AC" liest sich wie ein Fehler.
+  const empty = value === "\u2013" || value === "" || value === null || value === undefined;
   return (
     <div className={`kpi ${strong ? "strong" : ""}`} title={title}>
       <span className="label">{label}</span>
       <span className="value">
-        {value}
-        {unit && <span className="unit">{unit}</span>}
+        {empty ? "\u2013" : value}
+        {unit && !empty && <span className="unit">{unit}</span>}
       </span>
     </div>
   );

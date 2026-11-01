@@ -12,15 +12,18 @@ import {
   buildGooglePrompt,
   buildMetaPrompt,
   buildPmaxPrompt,
+  buildCommentsPrompt,
   buildPostPrompt,
   buildStyleProfilePrompt,
   buildSystemPrompt,
   type GoogleBrief,
   type MetaBrief,
   type PostBrief,
+  type CommentsBrief,
   type StyleBrief,
 } from "../shared/prompts";
-import type { AppData, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { ResultEntry, SpendEntry } from "../shared/costs";
 import { calculateBreakEven, recommendStructure } from "../shared/ppc";
 
 let mainWindow: BrowserWindow | null = null;
@@ -104,6 +107,25 @@ function registerIpc(): void {
       ? data.checkedAccountItems.filter((x) => x !== id)
       : [...data.checkedAccountItems, id];
     return store.patch({ checkedAccountItems: next });
+  });
+
+  ipcMain.handle("data:saveSettings", (_e, settings: AppSettings): AppData => store.patch({ settings }));
+
+  ipcMain.handle("costs:addSpend", (_e, entry: SpendEntry): AppData => {
+    const data = store.load();
+    return store.patch({ spend: [entry, ...data.spend] });
+  });
+  ipcMain.handle("costs:removeSpend", (_e, id: string): AppData => {
+    const data = store.load();
+    return store.patch({ spend: data.spend.filter((s) => s.id !== id) });
+  });
+  ipcMain.handle("costs:addResult", (_e, entry: ResultEntry): AppData => {
+    const data = store.load();
+    return store.patch({ results: [entry, ...data.results] });
+  });
+  ipcMain.handle("costs:removeResult", (_e, id: string): AppData => {
+    const data = store.load();
+    return store.patch({ results: data.results.filter((r) => r.id !== id) });
   });
 
   ipcMain.handle("library:add", (_e, item: LibraryItem): AppData => store.addLibraryItem(item));
@@ -218,6 +240,9 @@ function registerIpc(): void {
           structure.pmaxAdvisable,
         );
         break;
+      case "kommentare":
+        user = buildCommentsPrompt(payload.brief as unknown as CommentsBrief);
+        break;
       case "stilprofil":
         user = buildStyleProfilePrompt(payload.brief as unknown as StyleBrief);
         effort = "high";
@@ -250,6 +275,22 @@ function registerIpc(): void {
           if (!event.sender.isDestroyed()) event.sender.send("claude:delta", chunk);
         },
       });
+      // Verbrauch mitschreiben, damit die Kostenrechnung spaeter nicht schaetzen muss.
+      const current = store.load();
+      store.patch({
+        usageLog: [
+          {
+            id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+            at: new Date().toISOString(),
+            kind: payload.kind,
+            inputTokens: outcome.usage.inputTokens,
+            outputTokens: outcome.usage.outputTokens,
+            costUsd: outcome.usage.estimatedCostUsd,
+          },
+          ...current.usageLog,
+        ].slice(0, 2000),
+      });
+
       const { data: parsed, parseError } = extractJson(outcome.text);
       return {
         ok: true,

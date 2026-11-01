@@ -5,7 +5,8 @@
  */
 
 import { contextBridge, ipcRenderer } from "electron";
-import type { AppData, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
+import type { ResultEntry, SpendEntry } from "../shared/costs";
 import type { AdLibraryQuery } from "../shared/adlibrary";
 
 const api = {
@@ -13,6 +14,12 @@ const api = {
   saveProfile: (profile: Profile): Promise<AppData> => ipcRenderer.invoke("data:saveProfile", profile),
   saveValue: (value: ValueSettings): Promise<AppData> => ipcRenderer.invoke("data:saveValue", value),
   toggleAccountCheck: (id: string): Promise<AppData> => ipcRenderer.invoke("data:toggleAccountCheck", id),
+
+  saveSettings: (settings: AppSettings): Promise<AppData> => ipcRenderer.invoke("data:saveSettings", settings),
+  addSpend: (entry: SpendEntry): Promise<AppData> => ipcRenderer.invoke("costs:addSpend", entry),
+  removeSpend: (id: string): Promise<AppData> => ipcRenderer.invoke("costs:removeSpend", id),
+  addResult: (entry: ResultEntry): Promise<AppData> => ipcRenderer.invoke("costs:addResult", entry),
+  removeResult: (id: string): Promise<AppData> => ipcRenderer.invoke("costs:removeResult", id),
 
   addLibraryItem: (item: LibraryItem): Promise<AppData> => ipcRenderer.invoke("library:add", item),
   updateLibraryItem: (id: string, changes: Partial<LibraryItem>): Promise<AppData> =>
