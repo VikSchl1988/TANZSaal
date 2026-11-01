@@ -1,0 +1,37 @@
+{
+  "name": "tanzsaal-werbe-studio",
+  "version": "1.0.0",
+  "description": "Werbe-Studio für TANZSaal — Posts, Meta Ads, Google Ads und PPC-Steuerung",
+  "author": "TANZSaal",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "dist/node/main/index.js",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build:node": "tsc -p tsconfig.node.json",
+    "build:renderer": "vite build",
+    "build": "npm run build:node && npm run build:renderer",
+    "dev:renderer": "vite",
+    "dev": "npm run build:node && VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+    "icon": "node build/make-icon.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.renderer.json --noEmit",
+    "dist": "npm run build && electron-builder --mac dmg --universal"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.17",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "vitest": "^2.1.8"
+  }
+}

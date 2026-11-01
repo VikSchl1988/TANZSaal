@@ -1,0 +1,33 @@
+appId: de.tanzsaal.werbestudio
+productName: TANZSaal Werbe-Studio
+copyright: TANZSaal
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**/*
+  - package.json
+  - '!**/*.map'
+mac:
+  category: public.app-category.business
+  target:
+    - target: dmg
+      arch: [universal]
+  icon: build/icon.png
+  # Ohne Apple-Developer-Zertifikat wird nicht signiert. afterPack setzt dann
+  # eine Ad-hoc-Signatur, ohne die die App auf Apple Silicon nicht startet.
+  identity: null
+  darkModeSupport: true
+  extendInfo:
+    LSMinimumSystemVersion: '11.0'
+dmg:
+  title: TANZSaal Werbe-Studio
+  contents:
+    - x: 140
+      y: 200
+      type: file
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+afterPack: build/ad-hoc-sign.cjs
