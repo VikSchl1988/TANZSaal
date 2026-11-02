@@ -1,11 +1,19 @@
 import { useMemo, useState } from "react";
 import type { TabProps } from "../tabprops";
 import { studio } from "../api";
-import { Area, Card, Empty, Kpi, Notice, Pill, eur } from "../ui";
+import { Area, Card, Empty, Field, Kpi, Notice, Pill, Select, eur } from "../ui";
 import { costLabel, makeLibraryItem, useGenerate } from "../useGenerate";
 import type { AnalysisResult } from "../../shared/types";
 import { parseReport } from "../../shared/report";
 import { assessPerformance, calculateBreakEven } from "../../shared/ppc";
+import {
+  guessMonth,
+  REPORT_CHANNEL_LABEL,
+  summarizeHistory,
+  type ReportChannel,
+  type ReportSnapshot,
+} from "../../shared/history";
+import { monthLabel, currentMonth } from "../../shared/costs";
 
 const VERDICT_LABEL: Record<string, { text: string; kind: "ok" | "warn" | "bad" | undefined }> = {
   laeuft: { text: "läuft", kind: "ok" },
@@ -19,6 +27,9 @@ export function Auswertung({ data, refresh }: TabProps) {
   const [fileName, setFileName] = useState<string | null>(null);
   const [context, setContext] = useState("");
   const [savedNote, setSavedNote] = useState<string | null>(null);
+  const [month, setMonth] = useState(currentMonth());
+  const [channel, setChannel] = useState<ReportChannel>("google");
+  const [historyNote, setHistoryNote] = useState<string | null>(null);
 
   const gen = useGenerate<AnalysisResult>("auswertung");
   const be = calculateBreakEven(data.value);
@@ -42,12 +53,41 @@ export function Auswertung({ data, refresh }: TabProps) {
     };
   }, [parsed]);
 
+  const history = useMemo(
+    () => summarizeHistory(data.reportHistory, { targetCpaEur: be.targetCpaEur, breakEvenCpaEur: be.breakEvenCpaEur }),
+    [data.reportHistory, be.targetCpaEur, be.breakEvenCpaEur],
+  );
+
   const load = async () => {
     const res = await studio().readTextFile();
     if (res.canceled || !res.contents) return;
     setCsv(res.contents);
     setFileName(res.name ?? null);
+    // Der Dateiname trägt den Monat meistens schon — dann muss er nicht
+    // getippt werden, und es wird seltener der falsche gewählt.
+    setMonth(guessMonth(res.name ?? "", currentMonth()));
     gen.reset();
+  };
+
+  const keep = async () => {
+    if (!parsed || !totals) return;
+    const impressions = parsed.rows.reduce((s, r) => s + (r.impressions ?? 0), 0);
+    const snapshot: ReportSnapshot = {
+      id: `report-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      month,
+      channel,
+      clicks: totals.clicks,
+      costEur: totals.cost,
+      conversions: totals.conv,
+      ...(impressions > 0 ? { impressions } : {}),
+      rows: parsed.rows.length,
+      createdAt: new Date().toISOString(),
+      ...(fileName ? { note: fileName } : {}),
+    };
+    await studio().addReportSnapshot(snapshot);
+    await refresh();
+    setHistoryNote(`${monthLabel(month)} abgelegt. Ab dem zweiten Monat steht oben, wohin es geht.`);
+    setTimeout(() => setHistoryNote(null), 5000);
   };
 
   const save = async () => {
@@ -74,6 +114,124 @@ export function Auswertung({ data, refresh }: TabProps) {
         <Notice kind="bad" title="Ohne eigene Grenzwerte ist die Ampel blind">
           Trage im PPC-Cockpit deine Zahlen ein. Sonst kann niemand sagen, ob ein CPA von 40 EUR gut oder ruinös ist.
         </Notice>
+      )}
+
+      {history.months.length > 0 && (
+        <Card
+          title="Verlauf"
+          hint={history.headline}
+          right={
+            <Pill kind={history.direction === "besser" ? "ok" : history.direction === "schlechter" ? "bad" : undefined}>
+              {history.direction === "besser"
+                ? "wird besser"
+                : history.direction === "schlechter"
+                  ? "wird schlechter"
+                  : history.direction === "gleich"
+                    ? "bleibt gleich"
+                    : "noch keine Richtung"}
+            </Pill>
+          }
+        >
+          <div className="kpi-row" style={{ marginBottom: 16 }}>
+            <Kpi label="Monate im Verlauf" value={history.months.length} />
+            <Kpi label="Ausgegeben insgesamt" value={eur(history.totalCostEur)} unit="€" />
+            <Kpi label="Anmeldungen insgesamt" value={history.totalConversions} />
+            <Kpi
+              label="Preis je Anmeldung"
+              value={history.overallCpaEur !== null ? eur(history.overallCpaEur) : "–"}
+              unit={history.overallCpaEur !== null ? "€" : undefined}
+              strong={history.overallCpaEur !== null && be.breakEvenCpaEur > 0 && history.overallCpaEur > be.breakEvenCpaEur}
+              title="Über den ganzen Zeitraum gerechnet, nicht der Mittelwert der Monatswerte"
+            />
+          </div>
+
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Monat</th>
+                <th className="num">Klicks</th>
+                <th className="num">Kosten</th>
+                <th className="num">Anmeld.</th>
+                <th className="num">CPC</th>
+                <th className="num">CPA</th>
+                <th className="num">gegen Vormonat</th>
+                <th>Urteil</th>
+              </tr>
+            </thead>
+            <tbody>
+              {history.months.map((m) => {
+                const label = VERDICT_LABEL[m.verdict] ?? { text: m.verdict, kind: undefined };
+                return (
+                  <tr key={m.month}>
+                    <td>
+                      {monthLabel(m.month)}
+                      <div className="hint-faint">
+                        {m.channels.map((c) => REPORT_CHANNEL_LABEL[c]).join(", ")}
+                        {m.reports > 1 ? ` · ${m.reports} Berichte` : ""}
+                      </div>
+                    </td>
+                    <td className="num">{m.clicks.toLocaleString("de-DE")}</td>
+                    <td className="num">{eur(m.costEur)}</td>
+                    <td className="num">{m.conversions}</td>
+                    <td className="num">{m.cpcEur !== null ? eur(m.cpcEur) : "–"}</td>
+                    <td className="num">{m.cpaEur !== null ? eur(m.cpaEur) : "–"}</td>
+                    <td className="num">
+                      {m.cpaChangePercent === null ? (
+                        <span className="hint-faint">–</span>
+                      ) : (
+                        <span style={{ color: m.cpaChangePercent > 5 ? "var(--bad)" : m.cpaChangePercent < -5 ? "var(--ok)" : undefined }}>
+                          {m.cpaChangePercent > 0 ? "+" : ""}
+                          {m.cpaChangePercent.toFixed(0)} %
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <Pill kind={label.kind}>{label.text}</Pill>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {history.warnings.map((w, i) => (
+            <p key={i} className="hint" style={{ color: "var(--warn)", marginTop: 10 }}>
+              {w}
+            </p>
+          ))}
+
+          <details className="fold" style={{ marginTop: 14 }}>
+            <summary>Abgelegte Berichte verwalten</summary>
+            <div style={{ marginTop: 10 }}>
+              {data.reportHistory
+                .slice()
+                .sort((a, b) => b.month.localeCompare(a.month) || b.createdAt.localeCompare(a.createdAt))
+                .map((snap) => (
+                  <div key={snap.id} className="lib-item">
+                    <div className="lib-main">
+                      <strong>
+                        {monthLabel(snap.month)} · {REPORT_CHANNEL_LABEL[snap.channel]}
+                      </strong>
+                      <div className="meta">
+                        {snap.clicks.toLocaleString("de-DE")} Klicks · {eur(snap.costEur)} € · {snap.conversions} Anmeldungen ·{" "}
+                        {snap.rows} Zeilen
+                        {snap.note ? ` · ${snap.note}` : ""}
+                      </div>
+                    </div>
+                    <button
+                      className="btn small"
+                      onClick={async () => {
+                        await studio().removeReportSnapshot(snap.id);
+                        await refresh();
+                      }}
+                    >
+                      Entfernen
+                    </button>
+                  </div>
+                ))}
+            </div>
+          </details>
+        </Card>
       )}
 
       <Card
@@ -150,6 +308,23 @@ export function Auswertung({ data, refresh }: TabProps) {
               })}
             </tbody>
           </table>
+          <div className="grid three" style={{ marginTop: 18 }}>
+            <Field label="Monat des Berichts" value={month} onChange={setMonth} placeholder="2026-10" sub="Jahr und Monat" />
+            <Select
+              label="Kanal"
+              value={channel}
+              onChange={(v) => setChannel(v as ReportChannel)}
+              options={(Object.keys(REPORT_CHANNEL_LABEL) as ReportChannel[]).map((c) => ({ value: c, label: REPORT_CHANNEL_LABEL[c] }))}
+              sub="Meta und Google getrennt ablegen, sie werden je Monat zusammengezählt"
+            />
+            <div style={{ display: "flex", alignItems: "flex-end" }}>
+              <button className="btn" disabled={!/^\d{4}-\d{2}$/.test(month)} onClick={() => void keep()}>
+                In den Verlauf legen
+              </button>
+            </div>
+          </div>
+          {historyNote && <p className="hint-faint" style={{ marginTop: 8 }}>{historyNote}</p>}
+
           <div className="row end" style={{ marginTop: 16 }}>
             <span className="hint-faint" style={{ flex: 1 }}>
               {gen.busy ? "Claude liest den Bericht…" : gen.usage ? costLabel(gen.usage) : "Die Einschätzung kostet ein paar Cent."}

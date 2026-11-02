@@ -15,6 +15,7 @@ import { Kommentare } from "./tabs/Kommentare";
 import { Plan } from "./tabs/Plan";
 import { Follower } from "./tabs/Follower";
 import { Veroeffentlichen } from "./tabs/Veroeffentlichen";
+import { Tracking } from "./tabs/Tracking";
 
 type TabId =
   | "profil"
@@ -30,7 +31,8 @@ type TabId =
   | "kommentare"
   | "plan"
   | "follower"
-  | "veroeffentlichen";
+  | "veroeffentlichen"
+  | "tracking";
 
 const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = [
   { id: "post", label: "Post-Studio", icon: "◻", group: "Erstellen" },
@@ -41,6 +43,7 @@ const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = 
   { id: "follower", label: "Follower", icon: "◍", group: "Lernen" },
   { id: "vorbilder", label: "Vorbilder", icon: "◎" },
   { id: "cockpit", label: "PPC-Cockpit", icon: "◆", group: "Steuern" },
+  { id: "tracking", label: "Nachverfolgung", icon: "⌁" },
   { id: "auswertung", label: "Auswertung", icon: "▤" },
   { id: "kosten", label: "Kosten", icon: "€" },
   { id: "plan", label: "Plan", icon: "▦", group: "Ablage" },
@@ -127,6 +130,7 @@ export function App() {
           {tab === "plan" && <Plan data={data} refresh={refresh} />}
           {tab === "follower" && <Follower data={data} refresh={refresh} />}
           {tab === "veroeffentlichen" && <Veroeffentlichen data={data} refresh={refresh} />}
+          {tab === "tracking" && <Tracking data={data} refresh={refresh} />}
           {tab === "cockpit" && <Cockpit data={data} refresh={refresh} />}
           {tab === "auswertung" && <Auswertung data={data} refresh={refresh} />}
           {tab === "bibliothek" && <Bibliothek data={data} refresh={refresh} />}

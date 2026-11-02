@@ -28,6 +28,7 @@ import {
 } from "../shared/prompts";
 import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
 import type { ResultEntry, SpendEntry } from "../shared/costs";
+import type { ReportSnapshot } from "../shared/history";
 import { calculateBreakEven, recommendStructure } from "../shared/ppc";
 
 let mainWindow: BrowserWindow | null = null;
@@ -130,6 +131,16 @@ function registerIpc(): void {
   ipcMain.handle("costs:removeResult", (_e, id: string): AppData => {
     const data = store.load();
     return store.patch({ results: data.results.filter((r) => r.id !== id) });
+  });
+
+  ipcMain.handle("history:add", (_e, entry: ReportSnapshot): AppData => {
+    const data = store.load();
+    return store.patch({ reportHistory: [...data.reportHistory, entry] });
+  });
+
+  ipcMain.handle("history:remove", (_e, id: string): AppData => {
+    const data = store.load();
+    return store.patch({ reportHistory: data.reportHistory.filter((r) => r.id !== id) });
   });
 
   ipcMain.handle("library:add", (_e, item: LibraryItem): AppData => store.addLibraryItem(item));

@@ -86,7 +86,7 @@ describe("recommendBidStrategy", () => {
   it("unter 15 Conversions: Klicks maximieren mit Limit", () => {
     const a = recommendBidStrategy({ ...common, conversionsLast30Days: 14, conversionTrackingWorks: true });
     expect(a.strategy).toBe("klicks_maximieren_mit_limit");
-    expect(a.setting).toContain("1.44");
+    expect(a.setting).toContain("1,44");
   });
 
   it("an der Schwelle 15 beginnt der vorsichtige Ziel-CPA", () => {

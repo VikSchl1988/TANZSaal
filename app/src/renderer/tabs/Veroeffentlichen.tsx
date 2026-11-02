@@ -180,7 +180,7 @@ export function Veroeffentlichen({ data, refresh }: TabProps) {
           </label>
           <span className="hint-faint">
             {facts
-              ? `${facts.name} — ${facts.width} × ${facts.height}${facts.durationSeconds ? `, ${facts.durationSeconds.toFixed(1)} s` : ""}${facts.sizeBytes ? `, ${(facts.sizeBytes / 1024 / 1024).toFixed(1)} MB` : ""}`
+              ? `${facts.name} — ${facts.width} × ${facts.height}${facts.durationSeconds ? `, ${facts.durationSeconds.toLocaleString("de-DE", { minimumFractionDigits: 1, maximumFractionDigits: 1 })} s` : ""}${facts.sizeBytes ? `, ${(facts.sizeBytes / 1024 / 1024).toLocaleString("de-DE", { maximumFractionDigits: 1 })} MB` : ""}`
               : "Die Datei bleibt auf deinem Rechner — gelesen werden nur Maße und Länge."}
           </span>
         </div>

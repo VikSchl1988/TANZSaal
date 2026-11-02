@@ -13,8 +13,12 @@ import {
 } from "../../shared/insights";
 import type { FollowerResult } from "../../shared/types";
 
+function de(v: number, digits: number): string {
+  return v.toLocaleString("de-DE", { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
 function pct(v: number | null | undefined, digits = 1): string {
-  return v === null || v === undefined ? "–" : `${v.toFixed(digits)} %`;
+  return v === null || v === undefined ? "–" : `${de(v, digits)} %`;
 }
 
 function int(v: number | null | undefined): string {
@@ -158,7 +162,7 @@ export function Follower({ refresh }: TabProps) {
               strong
             />
             <Kpi label="in Prozent" value={pct(followers.growthPercent)} />
-            <Kpi label="je Tag" value={followers.perDay === null ? "–" : followers.perDay.toFixed(1)} />
+            <Kpi label="je Tag" value={followers.perDay === null ? "–" : de(followers.perDay, 1)} />
             <Kpi label="Tempo" value={TREND_LABEL[followers.trend] ?? followers.trend} />
           </div>
           <div className="kpi-row" style={{ marginTop: 10 }}>
@@ -238,7 +242,7 @@ export function Follower({ refresh }: TabProps) {
                     </td>
                     <td>{pct(f.avgEngagementPercent)}</td>
                     <td>{int(f.avgReach)}</td>
-                    <td>{f.avgFollows === null ? "–" : f.avgFollows.toFixed(1)}</td>
+                    <td>{f.avgFollows === null ? "–" : de(f.avgFollows, 1)}</td>
                   </tr>
                 ))}
               </tbody>

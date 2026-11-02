@@ -1,5 +1,6 @@
 import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
 import type { ResultEntry, SpendEntry } from "../shared/costs";
+import type { ReportSnapshot } from "../shared/history";
 import type { AdLibraryQuery, AdLibraryAd } from "../shared/adlibrary";
 
 export interface AdLibraryOutcome {
@@ -21,6 +22,8 @@ export interface StudioApi {
   removeSpend(id: string): Promise<AppData>;
   addResult(entry: ResultEntry): Promise<AppData>;
   removeResult(id: string): Promise<AppData>;
+  addReportSnapshot(entry: ReportSnapshot): Promise<AppData>;
+  removeReportSnapshot(id: string): Promise<AppData>;
   addLibraryItem(item: LibraryItem): Promise<AppData>;
   updateLibraryItem(id: string, changes: Partial<LibraryItem>): Promise<AppData>;
   removeLibraryItem(id: string): Promise<AppData>;

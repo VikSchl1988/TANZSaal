@@ -1,8 +1,10 @@
 /** Gemeinsame Datentypen für Main-Prozess und Oberfläche. */
 
 import type { ResultEntry, SpendEntry, UsageEntry } from "./costs";
+import type { ReportSnapshot } from "./history";
 
 export type { ResultEntry, SpendEntry, UsageEntry };
+export type { ReportSnapshot };
 
 export interface Profile {
   businessName: string;
@@ -123,6 +125,7 @@ export interface AppData {
   usageLog: UsageEntry[];
   spend: SpendEntry[];
   results: ResultEntry[];
+  reportHistory: ReportSnapshot[];
   settings: AppSettings;
   version: number;
 }
@@ -136,6 +139,7 @@ export const EMPTY_APP_DATA: AppData = {
   usageLog: [],
   spend: [],
   results: [],
+  reportHistory: [],
   settings: DEFAULT_SETTINGS,
   version: 1,
 };

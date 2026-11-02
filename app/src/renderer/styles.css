@@ -233,3 +233,11 @@ details.fold[open] summary { margin-bottom: 10px; }
   .main { padding: 38px 20px 56px; }
   .grid.two, .grid.three { grid-template-columns: 1fr; }
 }
+
+/* Vorschau: Format- und Variantenwahl, verdeckte Bereiche */
+.chip { font-size: 11.5px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg-sunken); color: var(--text-dim); cursor: pointer; }
+.chip:hover { color: var(--text); }
+.chip.on { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+.phone .ph-frame { position: relative; border-radius: 6px; overflow: hidden; background: linear-gradient(135deg, var(--border) 0%, var(--bg-raised) 100%); display: flex; align-items: center; justify-content: center; }
+.phone .ph-frame-label { color: var(--text-faint); font-size: 11px; text-align: center; padding: 8px; }
+.phone .ph-safe { position: absolute; left: 0; right: 0; background: repeating-linear-gradient(135deg, rgba(0,0,0,0.28) 0 6px, rgba(0,0,0,0.12) 6px 12px); }

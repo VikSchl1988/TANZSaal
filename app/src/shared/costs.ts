@@ -6,6 +6,8 @@
  * wie "eine Anmeldung kostet dich 38 Euro" belastbar.
  */
 
+import { num2 } from "./format";
+
 export interface UsageEntry {
   id: string;
   /** ISO-Zeitstempel */
@@ -165,7 +167,7 @@ export function assessMonth(
     return {
       verdict: "unbekannt",
       headline: "Keine Ergebnisse erfasst",
-      detail: `${cost.totalEur.toFixed(2)} EUR ausgegeben, aber keine Anmeldungen eingetragen. Ohne diese Zahl lässt sich nicht sagen, ob sich das gelohnt hat.`,
+      detail: `${num2(cost.totalEur)} EUR ausgegeben, aber keine Anmeldungen eingetragen. Ohne diese Zahl lässt sich nicht sagen, ob sich das gelohnt hat.`,
     };
   }
   const cpa = cost.costPerSignupEur ?? 0;
@@ -173,27 +175,27 @@ export function assessMonth(
   if (breakEvenCpaEur <= 0) {
     return {
       verdict: "unbekannt",
-      headline: `${cpa.toFixed(2)} EUR je Anmeldung`,
+      headline: `${num2(cpa)} EUR je Anmeldung`,
       detail: "Im PPC-Cockpit fehlen die Zahlen für den Break-even. Ohne sie ist das nur ein Wert ohne Maßstab.",
     };
   }
   if (cpa <= targetCpaEur) {
     return {
       verdict: "traegt_sich",
-      headline: `${cpa.toFixed(2)} EUR je Anmeldung — unter deinem Ziel`,
-      detail: `Dein Ziel liegt bei ${targetCpaEur.toFixed(2)} EUR. Hier gehört mehr Budget hin, nicht weniger.`,
+      headline: `${num2(cpa)} EUR je Anmeldung — unter deinem Ziel`,
+      detail: `Dein Ziel liegt bei ${num2(targetCpaEur)} EUR. Hier gehört mehr Budget hin, nicht weniger.`,
     };
   }
   if (cpa <= breakEvenCpaEur) {
     return {
       verdict: "grenzwertig",
-      headline: `${cpa.toFixed(2)} EUR je Anmeldung — über Ziel, unter Break-even`,
-      detail: `Du verdienst daran, aber knapp. Ziel wären ${targetCpaEur.toFixed(2)} EUR, ab ${breakEvenCpaEur.toFixed(2)} EUR zahlst du drauf.`,
+      headline: `${num2(cpa)} EUR je Anmeldung — über Ziel, unter Break-even`,
+      detail: `Du verdienst daran, aber knapp. Ziel wären ${num2(targetCpaEur)} EUR, ab ${num2(breakEvenCpaEur)} EUR zahlst du drauf.`,
     };
   }
   return {
     verdict: "zuschuss",
-    headline: `${cpa.toFixed(2)} EUR je Anmeldung — über dem Break-even`,
-    detail: `Ab ${breakEvenCpaEur.toFixed(2)} EUR kostet dich jede weitere Anmeldung Geld. Entweder die Kampagnen aufräumen oder das Angebot verteuern.`,
+    headline: `${num2(cpa)} EUR je Anmeldung — über dem Break-even`,
+    detail: `Ab ${num2(breakEvenCpaEur)} EUR kostet dich jede weitere Anmeldung Geld. Entweder die Kampagnen aufräumen oder das Angebot verteuern.`,
   };
 }

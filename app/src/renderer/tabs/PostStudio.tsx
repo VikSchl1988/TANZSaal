@@ -5,6 +5,7 @@ import { Area, Card, Copy, Empty, Field, MarkGaps, Notice, Pill, Select } from "
 import { costLabel, makeLibraryItem, useGenerate } from "../useGenerate";
 import type { PostResult } from "../../shared/types";
 import { postMarkdown } from "../../shared/exporters";
+import { specOf } from "../../shared/media";
 
 const FORMATS = [
   { value: "Feed-Post", label: "Feed-Post" },
@@ -157,23 +158,14 @@ export function PostStudio({ data, refresh }: TabProps) {
                 ))}
               </div>
 
-              {r.variants?.[0] && (
-                <div className="phone">
-                  <div className="ph-head">
-                    <div className="ph-avatar" />
-                    <div>
-                      <div className="ph-name">{data.profile.businessName || "tanzsaal"}</div>
-                      <div style={{ fontSize: 10.5, color: "var(--text-faint)" }}>{data.profile.city}</div>
-                    </div>
-                  </div>
-                  <div className="ph-image" style={{ aspectRatio: format === "Reel" || format === "Story" ? "9 / 16" : "4 / 5" }}>
-                    {format === "Reel" || format === "Story" ? "9:16" : "4:5"} — {r.imageBrief ? "Motiv siehe Bildbrief" : "Bild"}
-                  </div>
-                  <div className="ph-caption">
-                    {(r.variants[0].caption ?? "").slice(0, 125)}
-                    {(r.variants[0].caption ?? "").length > 125 && <span className="more">… mehr</span>}
-                  </div>
-                </div>
+              {r.variants && r.variants.length > 0 && (
+                <Vorschau
+                  variants={r.variants}
+                  businessName={data.profile.businessName}
+                  city={data.profile.city}
+                  hasImageBrief={Boolean(r.imageBrief)}
+                  initialRatio={format === "Reel" || format === "Story" ? "9:16" : "4:5"}
+                />
               )}
             </div>
           </Card>
@@ -261,5 +253,101 @@ export function PostStudio({ data, refresh }: TabProps) {
         </>
       )}
     </>
+  );
+}
+
+/* --------------------------------------------------------- Vorschau */
+
+type Ratio = "4:5" | "1:1" | "9:16";
+
+const RATIO_CSS: Record<Ratio, string> = { "4:5": "4 / 5", "1:1": "1 / 1", "9:16": "9 / 16" };
+
+const RATIO_NOTE: Record<Ratio, string> = {
+  "4:5": "Nimmt im Feed den meisten Platz ein — die stärkste Wahl für einen Beitrag.",
+  "1:1": "Quadratisch. Erlaubt, fällt im Feed aber weniger auf als 4:5.",
+  "9:16": "Reel und Story. Die grauen Streifen verdeckt Instagram mit eigener Oberfläche.",
+};
+
+/** Ab hier klappt Instagram die Bildunterschrift zu. */
+const FOLD = 125;
+
+function Vorschau({
+  variants,
+  businessName,
+  city,
+  hasImageBrief,
+  initialRatio,
+}: {
+  variants: PostResult["variants"];
+  businessName: string;
+  city: string;
+  hasImageBrief: boolean;
+  initialRatio: Ratio;
+}) {
+  const [ratio, setRatio] = useState<Ratio>(initialRatio);
+  const [which, setWhich] = useState(0);
+  const v = variants[Math.min(which, variants.length - 1)];
+  if (!v) return null;
+
+  const caption = v.caption ?? "";
+  const visible = [...caption].slice(0, FOLD).join("");
+  const hidden = [...caption].slice(FOLD).join("");
+  const spec = specOf("ig_reel");
+  const safe = spec.safeArea;
+
+  return (
+    <div className="phone">
+      <div className="row" style={{ gap: 6, marginBottom: 10 }}>
+        {(["4:5", "1:1", "9:16"] as Ratio[]).map((x) => (
+          <button key={x} className={`chip${ratio === x ? " on" : ""}`} onClick={() => setRatio(x)}>
+            {x}
+          </button>
+        ))}
+      </div>
+      {variants.length > 1 && (
+        <div className="row" style={{ gap: 6, marginBottom: 10 }}>
+          {variants.map((_, i) => (
+            <button key={i} className={`chip${which === i ? " on" : ""}`} onClick={() => setWhich(i)}>
+              Variante {i + 1}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div className="ph-head">
+        <div className="ph-avatar" />
+        <div>
+          <div className="ph-name">{businessName || "tanzsaal"}</div>
+          <div style={{ fontSize: 10.5, color: "var(--text-faint)" }}>{city}</div>
+        </div>
+      </div>
+
+      <div className="ph-frame" style={{ aspectRatio: RATIO_CSS[ratio] }}>
+        {ratio === "9:16" && safe && (
+          <>
+            <div className="ph-safe" style={{ top: 0, height: `${safe.top}%` }} />
+            <div className="ph-safe" style={{ bottom: 0, height: `${safe.bottom}%` }} />
+          </>
+        )}
+        <span className="ph-frame-label">
+          {ratio} — {hasImageBrief ? "Motiv siehe Bildbrief" : "Bild"}
+        </span>
+      </div>
+
+      <div className="ph-caption">
+        <span className="ph-name">{businessName ? businessName.toLowerCase().replace(/\s+/g, "") : "tanzsaal"}</span>{" "}
+        {visible}
+        {hidden && <span className="more">… mehr</span>}
+      </div>
+      {hidden && (
+        <p className="hint-faint" style={{ marginTop: 6 }}>
+          {[...hidden].length} Zeichen stehen hinter dem „mehr" und werden nur gelesen, wenn der Anfang überzeugt hat.
+        </p>
+      )}
+      <p className="hint-faint" style={{ marginTop: 6 }}>
+        {RATIO_NOTE[ratio]}
+        {ratio === "9:16" && safe ? ` ${safe.note}` : ""}
+      </p>
+    </div>
   );
 }

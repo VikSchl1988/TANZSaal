@@ -7,6 +7,8 @@
  * damit sie testbar bleiben.
  */
 
+import { num2 } from "./format";
+
 export interface ValueInput {
   /** Umsatz des ersten Abschlusses in Euro (z. B. Kursgebühr) */
   firstSaleEur: number;
@@ -136,7 +138,7 @@ export function recommendBidStrategy(input: BidStrategyInput): BidStrategyAdvice
   const warnings: string[] = [];
   const conversions = Number.isFinite(input.conversionsLast30Days) ? Math.max(0, input.conversionsLast30Days) : 0;
   const budget = Number.isFinite(input.monthlyBudgetEur) ? Math.max(0, input.monthlyBudgetEur) : 0;
-  const cpcSetting = input.targetCpcEur > 0 ? `${input.targetCpcEur.toFixed(2)} €` : "— erst Break-even-CPC berechnen";
+  const cpcSetting = input.targetCpcEur > 0 ? `${num2(input.targetCpcEur)} €` : "— erst Break-even-CPC berechnen";
 
   if (budget > 0 && budget < 100) {
     warnings.push("Unter 100 € im Monat sammelt eine Suchkampagne zu wenig Daten, um etwas zu lernen. Lieber einen Monat sparen und dann mit 200 € vier Wochen durchlaufen lassen als zwei Monate mit 100 €.");
@@ -173,11 +175,11 @@ export function recommendBidStrategy(input: BidStrategyInput): BidStrategyAdvice
       label: "Ziel-CPA, vorsichtig eingeführt",
       setting:
         input.targetCpaEur > 0
-          ? `Conversions maximieren mit Ziel-CPA. Startwert: der aktuell erreichte CPA, nicht ${input.targetCpaEur.toFixed(2)} €. Dann in Schritten von 10 % senken.`
+          ? `Conversions maximieren mit Ziel-CPA. Startwert: der aktuell erreichte CPA, nicht ${num2(input.targetCpaEur)} €. Dann in Schritten von 10 % senken.`
           : "Conversions maximieren mit Ziel-CPA — Startwert ist der aktuell erreichte CPA",
       reason: `${conversions} Conversions in 30 Tagen reichen für Smart Bidding, aber knapp. Wer den Ziel-CPA sofort auf den Wunschwert setzt, drosselt die Auslieferung und die Kampagne steht.`,
       warnings: [...warnings, "Nach jeder Änderung zwei Wochen Lernphase abwarten und in dieser Zeit nichts anderes anfassen."],
-      nextStep: `Ziel-CPA alle zwei Wochen um 10 % senken, solange das Volumen hält — unteres Ende ist dein Ziel-CPA von ${input.targetCpaEur > 0 ? input.targetCpaEur.toFixed(2) + " €" : "(noch nicht berechnet)"}.`,
+      nextStep: `Ziel-CPA alle zwei Wochen um 10 % senken, solange das Volumen hält — unteres Ende ist dein Ziel-CPA von ${input.targetCpaEur > 0 ? num2(input.targetCpaEur) + " €" : "(noch nicht berechnet)"}.`,
     };
   }
 
@@ -186,7 +188,7 @@ export function recommendBidStrategy(input: BidStrategyInput): BidStrategyAdvice
     label: "Ziel-CPA",
     setting:
       input.targetCpaEur > 0
-        ? `Conversions maximieren mit Ziel-CPA ${input.targetCpaEur.toFixed(2)} €`
+        ? `Conversions maximieren mit Ziel-CPA ${num2(input.targetCpaEur)} €`
         : "Conversions maximieren mit Ziel-CPA — Zielwert aus dem Break-even-Rechner übernehmen",
     reason: `Mit ${conversions} Conversions in 30 Tagen hat die Strategie genug Signal, um Gebote je Suchanfrage sinnvoll zu steuern. Hier ist Automatik besser als jedes manuelle Gebot.`,
     warnings,
@@ -318,7 +320,7 @@ export function assessPerformance(row: PerformanceRow, breakEven: Pick<BreakEven
     return {
       ...base,
       verdict: "abschalten",
-      reason: `${clicks} Klicks für ${cost.toFixed(2)} € und keine einzige Conversion. Entweder passt die Landingpage nicht zur Anzeige, oder die Suchanfragen passen nicht zum Angebot — Suchbegriffe-Bericht prüfen, dann abschalten.`,
+      reason: `${clicks} Klicks für ${num2(cost)} € und keine einzige Conversion. Entweder passt die Landingpage nicht zur Anzeige, oder die Suchanfragen passen nicht zum Angebot — Suchbegriffe-Bericht prüfen, dann abschalten.`,
     };
   }
 
@@ -330,7 +332,7 @@ export function assessPerformance(row: PerformanceRow, breakEven: Pick<BreakEven
     return {
       ...base,
       verdict: "laeuft",
-      reason: `CPA ${cpaEur.toFixed(2)} € liegt unter dem Ziel-CPA von ${breakEven.targetCpaEur.toFixed(2)} €. Hier gehört mehr Budget hin, nicht weniger.`,
+      reason: `CPA ${num2(cpaEur)} € liegt unter dem Ziel-CPA von ${num2(breakEven.targetCpaEur)} €. Hier gehört mehr Budget hin, nicht weniger.`,
     };
   }
 
@@ -338,13 +340,13 @@ export function assessPerformance(row: PerformanceRow, breakEven: Pick<BreakEven
     return {
       ...base,
       verdict: "grenzwertig",
-      reason: `CPA ${cpaEur.toFixed(2)} € liegt über dem Ziel (${breakEven.targetCpaEur.toFixed(2)} €), aber noch unter dem Break-even (${breakEven.breakEvenCpaEur.toFixed(2)} €). Du verdienst daran, aber knapp — Anzeigentexte und Landingpage verbessern, bevor du Budget erhöhst.`,
+      reason: `CPA ${num2(cpaEur)} € liegt über dem Ziel (${num2(breakEven.targetCpaEur)} €), aber noch unter dem Break-even (${num2(breakEven.breakEvenCpaEur)} €). Du verdienst daran, aber knapp — Anzeigentexte und Landingpage verbessern, bevor du Budget erhöhst.`,
     };
   }
 
   return {
     ...base,
     verdict: "abschalten",
-    reason: `CPA ${cpaEur.toFixed(2)} € liegt über dem Break-even von ${breakEven.breakEvenCpaEur.toFixed(2)} € — jede weitere Conversion kostet dich Geld. Abschalten oder Gebote deutlich senken.`,
+    reason: `CPA ${num2(cpaEur)} € liegt über dem Break-even von ${num2(breakEven.breakEvenCpaEur)} € — jede weitere Conversion kostet dich Geld. Abschalten oder Gebote deutlich senken.`,
   };
 }

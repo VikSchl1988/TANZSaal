@@ -37,6 +37,7 @@ export function load(): AppData {
       usageLog: Array.isArray(parsed.usageLog) ? parsed.usageLog : [],
       spend: Array.isArray(parsed.spend) ? parsed.spend : [],
       results: Array.isArray(parsed.results) ? parsed.results : [],
+      reportHistory: Array.isArray(parsed.reportHistory) ? parsed.reportHistory : [],
       settings: { ...EMPTY_APP_DATA.settings, ...(parsed.settings ?? {}) },
     };
     return cache;

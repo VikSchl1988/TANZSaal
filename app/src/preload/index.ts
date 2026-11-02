@@ -7,6 +7,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
 import type { ResultEntry, SpendEntry } from "../shared/costs";
+import type { ReportSnapshot } from "../shared/history";
 import type { AdLibraryQuery } from "../shared/adlibrary";
 
 const api = {
@@ -20,6 +21,9 @@ const api = {
   removeSpend: (id: string): Promise<AppData> => ipcRenderer.invoke("costs:removeSpend", id),
   addResult: (entry: ResultEntry): Promise<AppData> => ipcRenderer.invoke("costs:addResult", entry),
   removeResult: (id: string): Promise<AppData> => ipcRenderer.invoke("costs:removeResult", id),
+
+  addReportSnapshot: (entry: ReportSnapshot): Promise<AppData> => ipcRenderer.invoke("history:add", entry),
+  removeReportSnapshot: (id: string): Promise<AppData> => ipcRenderer.invoke("history:remove", id),
 
   addLibraryItem: (item: LibraryItem): Promise<AppData> => ipcRenderer.invoke("library:add", item),
   updateLibraryItem: (id: string, changes: Partial<LibraryItem>): Promise<AppData> =>
