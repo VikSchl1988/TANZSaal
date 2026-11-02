@@ -26,6 +26,17 @@ describe("parseNumber", () => {
     expect(parseNumber("1,2345")).toBe(12345);
   });
 
+  it("behandelt den Punkt nach derselben Regel: drei Stellen heissen Tausender", () => {
+    // Ein deutscher Export schreibt 1340 als "1.340". Zwei Dezimalstellen
+    // bleiben Dezimalstellen, drei werden als Tausendertrennung gelesen.
+    expect(parseNumber("1.340")).toBe(1340);
+    expect(parseNumber("8.420")).toBe(8420);
+    expect(parseNumber("1.234.567")).toBe(1234567);
+    expect(parseNumber("12.50")).toBe(12.5);
+    expect(parseNumber("0.5")).toBe(0.5);
+    expect(parseNumber("1234.5")).toBe(1234.5);
+  });
+
   it("gibt bei Strichen 0 und bei Unsinn null zurueck", () => {
     expect(parseNumber("-")).toBe(0);
     expect(parseNumber("--")).toBe(0);
@@ -60,7 +71,7 @@ describe("parseReport", () => {
     ].join("\n");
     const r = parseReport(csv);
     expect(r.rows).toHaveLength(2);
-    expect(r.rows[0]).toEqual({ name: "Suche Kurse", clicks: 312, costEur: 284.5, conversions: 7, impressions: 8.42 });
+    expect(r.rows[0]).toEqual({ name: "Suche Kurse", clicks: 312, costEur: 284.5, conversions: 7, impressions: 8420 });
     expect(r.skippedLines).toBe(1); // Summenzeile verworfen
     expect(r.missing).toHaveLength(0);
     expect(r.mapping.clicks).toBe("Klicks");

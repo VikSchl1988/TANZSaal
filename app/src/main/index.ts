@@ -13,6 +13,8 @@ import {
   buildMetaPrompt,
   buildPmaxPrompt,
   buildCommentsPrompt,
+  buildFollowerPrompt,
+  buildMonthPlanPrompt,
   buildPostPrompt,
   buildStyleProfilePrompt,
   buildSystemPrompt,
@@ -20,6 +22,8 @@ import {
   type MetaBrief,
   type PostBrief,
   type CommentsBrief,
+  type FollowerBrief,
+  type MonthPlanBrief,
   type StyleBrief,
 } from "../shared/prompts";
 import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, StyleProfile, ValueSettings } from "../shared/types";
@@ -242,6 +246,14 @@ function registerIpc(): void {
         break;
       case "kommentare":
         user = buildCommentsPrompt(payload.brief as unknown as CommentsBrief);
+        break;
+      case "follower":
+        user = buildFollowerPrompt(payload.brief as unknown as FollowerBrief);
+        effort = "high";
+        break;
+      case "monatsplan":
+        user = buildMonthPlanPrompt(payload.brief as unknown as MonthPlanBrief, data.profile);
+        effort = "high";
         break;
       case "stilprofil":
         user = buildStyleProfilePrompt(payload.brief as unknown as StyleBrief);

@@ -62,7 +62,16 @@ export const DEFAULT_VALUE_SETTINGS: ValueSettings = {
   conversionTrackingWorks: false,
 };
 
-export type LibraryKind = "post" | "meta" | "google" | "pmax" | "auswertung" | "stilprofil" | "kommentare";
+export type LibraryKind =
+  | "post"
+  | "meta"
+  | "google"
+  | "pmax"
+  | "auswertung"
+  | "stilprofil"
+  | "kommentare"
+  | "follower"
+  | "monatsplan";
 
 export interface LibraryItem {
   id: string;
@@ -209,6 +218,39 @@ export interface AnalysisResult {
   actions: Array<{ action: string; expectedEffect: string }>;
   turnOff: string[];
   dataQuality: string;
+}
+
+export interface FollowerResult {
+  /** Ein ehrlicher Absatz: was die Zahlen hergeben, und was nicht */
+  summary: string;
+  findings: Array<{ finding: string; evidence: string }>;
+  doMore: Array<{ what: string; why: string }>;
+  doLess: Array<{ what: string; why: string }>;
+  nextPosts: Array<{ idea: string; format: string; why: string }>;
+  dataQuality: string;
+  openQuestions: string[];
+}
+
+export interface MonthPlanEntry {
+  /** JJJJ-MM-TT */
+  date: string;
+  format: string;
+  topic: string;
+  hook: string;
+  goal: string;
+  /** Welches Angebot daran haengt, oder leer bei reinem Vertrauensaufbau */
+  offer: string;
+  note: string;
+}
+
+export interface MonthPlanResult {
+  month: string;
+  /** Begruendung des Rhythmus */
+  rhythm: string;
+  entries: MonthPlanEntry[];
+  /** Verhaeltnis von verkaufenden zu nicht verkaufenden Beitraegen */
+  ratio: string;
+  openQuestions: string[];
 }
 
 /* --- IPC --- */

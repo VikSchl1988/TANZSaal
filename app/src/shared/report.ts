@@ -68,6 +68,12 @@ export function parseNumber(raw: string): number | null {
   } else if (lastComma > -1) {
     // Komma als Dezimaltrennzeichen, wenn hoechstens zwei Stellen folgen.
     s = s.length - lastComma <= 3 ? s.replace(",", ".") : s.replace(/,/g, "");
+  } else if (lastDot > -1) {
+    // Nur Punkte: dieselbe Regel wie beim Komma. Folgen genau drei Stellen,
+    // ist es ein Tausenderpunkt — "1.340" aus einem deutschen Export sind
+    // 1340 und nicht 1,34. Drei Dezimalstellen kommen in diesen Berichten
+    // nicht vor, Tausenderpunkte in jedem zweiten.
+    if (s.length - lastDot > 3) s = s.replace(/\./g, "");
   }
   const n = Number.parseFloat(s);
   return Number.isFinite(n) ? n : null;

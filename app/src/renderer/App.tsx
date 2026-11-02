@@ -13,15 +13,33 @@ import { Vorbilder } from "./tabs/Vorbilder";
 import { Kosten } from "./tabs/Kosten";
 import { Kommentare } from "./tabs/Kommentare";
 import { Plan } from "./tabs/Plan";
+import { Follower } from "./tabs/Follower";
+import { Veroeffentlichen } from "./tabs/Veroeffentlichen";
 
-type TabId = "profil" | "post" | "meta" | "google" | "cockpit" | "auswertung" | "bibliothek" | "einstellungen" | "vorbilder" | "kosten" | "kommentare" | "plan";
+type TabId =
+  | "profil"
+  | "post"
+  | "meta"
+  | "google"
+  | "cockpit"
+  | "auswertung"
+  | "bibliothek"
+  | "einstellungen"
+  | "vorbilder"
+  | "kosten"
+  | "kommentare"
+  | "plan"
+  | "follower"
+  | "veroeffentlichen";
 
 const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = [
   { id: "post", label: "Post-Studio", icon: "◻", group: "Erstellen" },
   { id: "meta", label: "Meta Ads", icon: "◉" },
   { id: "google", label: "Google Ads", icon: "▲" },
   { id: "kommentare", label: "Kommentare", icon: "✉" },
-  { id: "vorbilder", label: "Vorbilder", icon: "◎", group: "Lernen" },
+  { id: "veroeffentlichen", label: "Veröffentlichen", icon: "↑" },
+  { id: "follower", label: "Follower", icon: "◍", group: "Lernen" },
+  { id: "vorbilder", label: "Vorbilder", icon: "◎" },
   { id: "cockpit", label: "PPC-Cockpit", icon: "◆", group: "Steuern" },
   { id: "auswertung", label: "Auswertung", icon: "▤" },
   { id: "kosten", label: "Kosten", icon: "€" },
@@ -107,6 +125,8 @@ export function App() {
           {tab === "kommentare" && <Kommentare data={data} refresh={refresh} />}
           {tab === "kosten" && <Kosten data={data} refresh={refresh} />}
           {tab === "plan" && <Plan data={data} refresh={refresh} />}
+          {tab === "follower" && <Follower data={data} refresh={refresh} />}
+          {tab === "veroeffentlichen" && <Veroeffentlichen data={data} refresh={refresh} />}
           {tab === "cockpit" && <Cockpit data={data} refresh={refresh} />}
           {tab === "auswertung" && <Auswertung data={data} refresh={refresh} />}
           {tab === "bibliothek" && <Bibliothek data={data} refresh={refresh} />}

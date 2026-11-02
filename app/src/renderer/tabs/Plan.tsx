@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
 import type { TabProps } from "../tabprops";
 import { studio } from "../api";
-import { Card, Empty, Notice, Pill, Select } from "../ui";
-import type { LibraryItem, LibraryKind } from "../../shared/types";
+import { Area, Card, Empty, Field, MarkGaps, Notice, NumField, Pill, Select } from "../ui";
+import { costLabel, makeLibraryItem, useGenerate } from "../useGenerate";
+import type { LibraryItem, LibraryKind, MonthPlanResult } from "../../shared/types";
+import { currentMonth, monthLabel } from "../../shared/costs";
 
 const KIND_LABEL: Record<LibraryKind, string> = {
   post: "Post",
@@ -12,9 +14,11 @@ const KIND_LABEL: Record<LibraryKind, string> = {
   auswertung: "Auswertung",
   stilprofil: "Stilprofil",
   kommentare: "Kommentare",
+  follower: "Kontoanalyse",
+  monatsplan: "Monatsplan",
 };
 
-/** Nur was tatsaechlich veroeffentlicht wird, gehoert in den Plan. */
+/** Nur was tatsächlich veröffentlicht wird, gehört in den Plan. */
 const PLANNABLE: LibraryKind[] = ["post", "meta", "google", "pmax"];
 
 const STATUS_LABEL: Record<LibraryItem["status"], string> = {
@@ -27,8 +31,53 @@ function isoDay(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Der kommende Monat — danach wird in der Regel geplant, nicht nach dem laufenden. */
+function nextMonth(): string {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
 export function Plan({ data, refresh }: TabProps) {
   const [filter, setFilter] = useState<"alle" | LibraryItem["status"]>("alle");
+  const [month, setMonth] = useState(nextMonth());
+  const [postsPerMonth, setPostsPerMonth] = useState(12);
+  const [occasions, setOccasions] = useState("");
+  const [takenOver, setTakenOver] = useState<string | null>(null);
+
+  const gen = useGenerate<MonthPlanResult>("monatsplan");
+
+  // Was die letzte Kontoanalyse ergeben hat, geht in den Plan ein - sonst
+  // schlaegt Claude vor, was gut klingt, statt was bei dir funktioniert hat.
+  const whatWorks = useMemo(() => {
+    const latest = data.library
+      .filter((i) => i.kind === "follower")
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+    if (!latest) return "";
+    const r = latest.result as { doMore?: Array<{ what: string }>; findings?: Array<{ finding: string }> } | null;
+    const parts = [
+      ...(r?.findings ?? []).map((f) => f.finding),
+      ...(r?.doMore ?? []).map((d) => d.what),
+    ].filter(Boolean);
+    return parts.slice(0, 6).join("; ");
+  }, [data.library]);
+
+  async function takeOver(result: MonthPlanResult) {
+    for (const entry of result.entries ?? []) {
+      const item = makeLibraryItem(
+        "post",
+        entry.topic || "Ohne Thema",
+        { occasion: entry.topic, goal: entry.goal, hook: entry.hook, format: entry.format, offer: entry.offer },
+        null,
+      );
+      item.plannedFor = /^\d{4}-\d{2}-\d{2}$/.test(entry.date) ? entry.date : undefined;
+      item.notes = [entry.hook, entry.note].filter(Boolean).join(" — ");
+      await studio().addLibraryItem(item);
+    }
+    await refresh();
+    setTakenOver(`${(result.entries ?? []).length} Beiträge als Entwürfe übernommen. Sie stehen jetzt unten im Plan — ausgearbeitet werden sie im Post-Studio.`);
+  }
 
   const items = useMemo(
     () =>
@@ -79,6 +128,102 @@ export function Plan({ data, refresh }: TabProps) {
           ]}
         />
       </div>
+
+      <Card
+        title="Monatsplan vorschlagen"
+        hint="Claude verteilt Themen über den Monat und legt die verkaufenden Beiträge dorthin, wo sie wirken — nicht auf den Starttag."
+      >
+        <div className="grid three">
+          <Field label="Monat" value={month} onChange={setMonth} placeholder="2026-12" sub="Jahr und Monat, etwa 2026-12" />
+          <NumField label="Beiträge im Monat" value={postsPerMonth} onChange={setPostsPerMonth} sub="Acht bis zwölf sind realistisch, wenn du es allein machst" />
+          <div />
+        </div>
+        <div style={{ marginTop: 14 }}>
+          <Area
+            label="Was in dem Monat ansteht"
+            value={occasions}
+            onChange={setOccasions}
+            rows={3}
+            placeholder={"Kursstart Salsa Anfänger am 12.01.\nParty am 24.01.\nFerien vom 01. bis 06.01."}
+            sub="Kursstarts, Partys, Ferien, Feiertage. Ohne Anlässe wird der Plan allgemein."
+          />
+        </div>
+        {whatWorks && (
+          <p className="hint-faint" style={{ marginTop: 10 }}>
+            Aus der letzten Kontoanalyse geht ein: {whatWorks}
+          </p>
+        )}
+        <div className="row end" style={{ marginTop: 14 }}>
+          <span className="hint-faint" style={{ flex: 1 }}>
+            {gen.busy ? "Claude plant…" : gen.usage ? costLabel(gen.usage) : ""}
+          </span>
+          <button
+            className="btn primary"
+            disabled={gen.busy || !/^\d{4}-\d{2}$/.test(month)}
+            onClick={() => void gen.run({ month, postsPerMonth, occasions, formats: ["Reel", "Bild", "Karussell", "Story"], whatWorks })}
+          >
+            {gen.busy ? "läuft…" : "Plan vorschlagen"}
+          </button>
+        </div>
+        {gen.busy && gen.stream && <pre className="stream">{gen.stream}</pre>}
+        {gen.error && (
+          <Notice kind="bad" title="Das hat nicht geklappt">
+            {gen.error}
+          </Notice>
+        )}
+      </Card>
+
+      {gen.result && (
+        <Card
+          title={`Vorschlag für ${/^\d{4}-\d{2}$/.test(month) ? monthLabel(month) : month}`}
+          hint={gen.result.rhythm}
+          right={
+            <button className="btn" onClick={() => void takeOver(gen.result!)}>
+              Als Entwürfe übernehmen
+            </button>
+          }
+        >
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Datum</th>
+                <th>Format</th>
+                <th>Thema und Haken</th>
+                <th>Ziel</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(gen.result.entries ?? []).map((e, i) => (
+                <tr key={i}>
+                  <td>{/^\d{4}-\d{2}-\d{2}$/.test(e.date) ? new Date(e.date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }) : e.date}</td>
+                  <td>{e.format}</td>
+                  <td>
+                    <strong>
+                      <MarkGaps text={e.topic} />
+                    </strong>
+                    <div className="hint" style={{ marginTop: 2 }}>
+                      <MarkGaps text={e.hook} />
+                    </div>
+                    {e.offer && <div className="hint-faint">Angebot: {e.offer}</div>}
+                  </td>
+                  <td className="hint">{e.goal}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {gen.result.ratio && <p className="hint" style={{ marginTop: 14 }}>{gen.result.ratio}</p>}
+          {takenOver && <p className="hint-faint" style={{ marginTop: 8 }}>{takenOver}</p>}
+          {(gen.result.openQuestions ?? []).length > 0 && (
+            <Notice title="Noch zu klären">
+              <ul>
+                {gen.result.openQuestions.map((q, i) => (
+                  <li key={i}>{q}</li>
+                ))}
+              </ul>
+            </Notice>
+          )}
+        </Card>
+      )}
 
       {thisWeek.length > 0 && (
         <Card title="Diese Woche">

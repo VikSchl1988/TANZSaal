@@ -302,3 +302,78 @@ export function buildCommentsPrompt(brief: CommentsBrief): string {
     .filter(Boolean)
     .join("\n");
 }
+
+/* --------------------------------------------- Follower und Beitraege */
+
+export interface FollowerBrief {
+  /** Die fertig gerechnete Auswertung als Text */
+  analysis: string;
+  /** Was der Betrieb in dem Zeitraum vorhatte, falls bekannt */
+  context: string;
+}
+
+export function buildFollowerPrompt(brief: FollowerBrief): string {
+  return [
+    "Deute diese Auswertung des Instagram- und Facebook-Kontos.",
+    "",
+    "Die Zahlen sind bereits gerechnet. Rechne sie nicht nach und erfinde keine weiteren.",
+    "",
+    brief.analysis.slice(0, 16000),
+    "",
+    brief.context ? `Was in dem Zeitraum vorlag: ${brief.context}` : "",
+    "",
+    "So gehst du vor:",
+    "- In summary ein Absatz, der die Lage benennt, ohne sie schoenzureden und ohne sie schlimmer zu machen als sie ist. Wenn der Zeitraum zu kurz oder die Datenbasis zu schmal ist, steht das in diesem Absatz zuerst.",
+    "- In findings nur Befunde, die durch eine Zahl aus der Auswertung gedeckt sind. In evidence steht die Zahl, auf die du dich stuetzt. Einen Befund ohne Zahl lasse weg.",
+    "- Beachte den Unterschied zwischen Interaktionsrate und neuen Followern. Ein Beitrag mit hoher Rate kann null neue Follower gebracht haben: er hat den Bestand unterhalten. Ein Beitrag mit niedriger Rate kann der beste gewesen sein, wenn er Menschen hergeholt hat. Sage ausdruecklich, was welcher Beitrag geleistet hat.",
+    "- Bei den Formaten nicht blind dem Mittelwert folgen. Wenn ein Format nur zwei Mal vorkommt, ist sein Mittelwert ein Zufall — dann sag das statt es zu empfehlen.",
+    "- In doMore und doLess hoechstens drei Punkte je Seite, und nur solche, die sich aus den Zahlen ergeben. Jeder Punkt ist eine Handlung, nicht ein Wunsch: nicht mehr Reichweite, sondern was konkret gepostet wird.",
+    "- In nextPosts drei bis fuenf konkrete naechste Beitraege, die aus dem folgen, was nachweislich funktioniert hat. Keine allgemeinen Ideen, sondern solche, die zu diesem Betrieb und zu den erfolgreichen Beitraegen passen.",
+    "- In dataQuality offen, worauf man sich bei dieser Auswertung nicht stuetzen sollte.",
+    "",
+    "JSON-Form:",
+    '{"summary":"","findings":[{"finding":"","evidence":""}],"doMore":[{"what":"","why":""}],"doLess":[{"what":"","why":""}],"nextPosts":[{"idea":"","format":"","why":""}],"dataQuality":"","openQuestions":[""]}',
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/* ------------------------------------------------------- Monatsplan */
+
+export interface MonthPlanBrief {
+  /** Monat als JJJJ-MM */
+  month: string;
+  /** Wie viele Beitraege im Monat */
+  postsPerMonth: number;
+  /** Was in dem Monat ansteht: Kursstarts, Partys, Ferien, Feiertage */
+  occasions: string;
+  /** Welche Formate moeglich sind */
+  formats: string[];
+  /** Erkenntnisse aus der Auswertung, falls vorhanden */
+  whatWorks: string;
+}
+
+export function buildMonthPlanPrompt(brief: MonthPlanBrief, profile: Profile): string {
+  return [
+    `Erstelle einen Redaktionsplan fuer ${brief.month} mit ${brief.postsPerMonth} Beitraegen.`,
+    "",
+    brief.occasions ? `Was in diesem Monat ansteht: ${brief.occasions}` : "In diesem Monat steht nichts Besonderes an, soweit mitgeteilt.",
+    `Moegliche Formate: ${brief.formats.join(", ")}`,
+    brief.whatWorks ? `Aus der Auswertung des Kontos: ${brief.whatWorks}` : "",
+    "",
+    "Regeln:",
+    `- Datum als JJJJ-MM-TT, innerhalb von ${brief.month}, aufsteigend. Verteile die Beitraege gleichmaessig, aber lege sie um die Anlaesse herum dichter.`,
+    "- Hoechstens jeder dritte Beitrag verkauft direkt. Der Rest baut Vertrauen auf, zeigt den Betrieb, beantwortet Fragen oder unterhaelt. Begruende das Verhaeltnis in ratio.",
+    "- Vor einem Kursstart gehoert der verkaufende Beitrag nicht auf den Starttag, sondern zwei bis drei Wochen davor, und dann noch einmal kurz vorher.",
+    `- Jeder Beitrag braucht einen Haken, der zu ${profile.businessName || "dem Betrieb"} passt und nicht auf jede Tanzschule passen wuerde.`,
+    "- In goal steht, was der Beitrag bewirken soll, und zwar eines von: gefunden werden, Vertrauen aufbauen, Frage beantworten, zur Anmeldung bringen, Bestand halten.",
+    "- In offer nur Angebote aus dem Profil. Kennst du kein passendes, lasse das Feld leer, statt eines zu erfinden.",
+    "- Termine und Preise, die du nicht aus dem Profil hast, schreibe als [[BITTE PRUEFEN: was fehlt]] und nimm sie in openQuestions auf.",
+    "- Keine Themen, die der Betrieb nicht halten kann. Wenn du eine Idee gut findest, aber nicht weisst, ob es das gibt, schreib sie mit [[BITTE PRUEFEN: ...]] auf.",
+    "",
+    "JSON-Form:",
+    '{"month":"","rhythm":"","entries":[{"date":"","format":"","topic":"","hook":"","goal":"","offer":"","note":""}],"ratio":"","openQuestions":[""]}',
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
