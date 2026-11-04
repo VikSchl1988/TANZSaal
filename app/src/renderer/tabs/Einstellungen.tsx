@@ -3,6 +3,7 @@ import type { TabProps } from "../tabprops";
 import { studio, type BackupReadOutcome } from "../api";
 import { Card, Field, Notice, Pill } from "../ui";
 import { defaultExpiry, tokenState, type TokenStatus } from "../../shared/tokens";
+import { CHANGELOG, releaseFor } from "../../shared/version";
 
 const TOKEN_PILL: Record<TokenStatus, "ok" | "warn" | "bad" | undefined> = {
   gueltig: "ok",
@@ -259,6 +260,58 @@ export function Einstellungen({ data, refresh }: TabProps) {
               </button>
             </div>
           </Notice>
+        )}
+      </Card>
+
+      <Card
+        title="Aktualisieren"
+        hint={`Diese Installation läuft als Fassung ${info?.version ?? "…"}.`}
+      >
+        <p className="hint" style={{ marginTop: 0 }}>
+          Es gibt bewusst keine Selbstaktualisierung. Eine App, die Programmcode aus einer Datei nachlädt, führt genau
+          das aus, was in dieser Datei steht — und dieselbe App hat Zugriff auf deine Schlüssel und darf in deinem
+          Namen posten. Für zwei Rechner lohnt dieses Risiko nicht.
+        </p>
+        <p className="hint">So wird aktualisiert, und es dauert keine Minute:</p>
+        <ol className="hint" style={{ paddingLeft: 20 }}>
+          <li style={{ marginBottom: 4 }}>Neue DMG öffnen.</li>
+          <li style={{ marginBottom: 4 }}>App in den Programme-Ordner ziehen und das Ersetzen bestätigen.</li>
+          <li style={{ marginBottom: 4 }}>Starten. Beim ersten Mal nach dem Ersetzen wieder Rechtsklick, dann „Öffnen".</li>
+        </ol>
+        <Notice kind="ok" title="Deine Daten bleiben">
+          Profil, Zahlen, Bibliothek, Ausgaben und Verlauf liegen im Benutzerordner, nicht in der App. Sie überleben
+          jedes Ersetzen. Trotzdem: einmal sichern, bevor du ersetzt, kostet zehn Sekunden.
+        </Notice>
+        <p className="hint-faint">
+          Laufen zwei Rechner, vergleiche die Fassungsnummer unten links in der Seitenleiste. Jede Sicherungsdatei
+          trägt die Nummer ebenfalls im Kopf.
+        </p>
+      </Card>
+
+      <Card title="Was sich geändert hat">
+        {CHANGELOG.map((r) => (
+          <div key={r.version} style={{ marginBottom: 18 }}>
+            <div className="row" style={{ marginBottom: 6 }}>
+              <Pill kind={r.version === info?.version ? "ok" : undefined}>Fassung {r.version}</Pill>
+              <span className="hint-faint">
+                {new Date(r.date).toLocaleDateString("de-DE")}
+                {r.version === info?.version ? " · läuft gerade" : ""}
+              </span>
+            </div>
+            <ul className="hint" style={{ margin: 0, paddingLeft: 20 }}>
+              {r.changes.map((c, i) => (
+                <li key={i} style={{ marginBottom: 3 }}>
+                  {c}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+        {info && !releaseFor(info.version) && (
+          <p className="hint" style={{ color: "var(--warn)" }}>
+            Zu Fassung {info.version} liegt hier kein Eintrag vor. Entweder ist sie neuer als diese Übersicht, oder es
+            ist ein Zwischenstand.
+          </p>
         )}
       </Card>
 

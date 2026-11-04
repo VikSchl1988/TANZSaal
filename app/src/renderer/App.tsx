@@ -17,6 +17,7 @@ import { Follower } from "./tabs/Follower";
 import { Veroeffentlichen } from "./tabs/Veroeffentlichen";
 import { Tracking } from "./tabs/Tracking";
 import { Start } from "./tabs/Start";
+import { CURRENT } from "../shared/version";
 
 type TabId =
   | "start"
@@ -59,6 +60,11 @@ export function App() {
   const [tab, setTab] = useState<TabId>("start");
   const [data, setData] = useState<AppData | null>(null);
   const [theme, setTheme] = useState<string>(() => localStorage.getItem("theme") ?? "dark");
+  const [version, setVersion] = useState<string>("");
+
+  useEffect(() => {
+    void studio().appInfo().then((i) => setVersion(i.version));
+  }, []);
 
   const refresh = useCallback(async () => {
     setData(await studio().getData());
@@ -119,6 +125,12 @@ export function App() {
           <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
             {theme === "dark" ? "Hell" : "Dunkel"} anzeigen
           </button>
+          <div
+            className="version"
+            title={`Fassung ${version || CURRENT.version} vom ${CURRENT.date}. Die Nummer steht auch in jeder Sicherungsdatei.`}
+          >
+            Fassung {version || CURRENT.version}
+          </div>
         </div>
       </aside>
 

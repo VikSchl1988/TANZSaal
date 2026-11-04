@@ -246,3 +246,6 @@ details.fold[open] summary { margin-bottom: 10px; }
 .meter-bar { height: 7px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 99px; overflow: hidden; }
 .meter-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
 @media (prefers-reduced-motion: reduce) { .meter-fill { transition: none; } }
+
+/* Fassungsnummer unten in der Seitenleiste */
+.sidebar-foot .version { margin-top: 8px; padding-bottom: 10px; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; cursor: default; }
