@@ -241,3 +241,8 @@ details.fold[open] summary { margin-bottom: 10px; }
 .phone .ph-frame { position: relative; border-radius: 6px; overflow: hidden; background: linear-gradient(135deg, var(--border) 0%, var(--bg-raised) 100%); display: flex; align-items: center; justify-content: center; }
 .phone .ph-frame-label { color: var(--text-faint); font-size: 11px; text-align: center; padding: 8px; }
 .phone .ph-safe { position: absolute; left: 0; right: 0; background: repeating-linear-gradient(135deg, rgba(0,0,0,0.28) 0 6px, rgba(0,0,0,0.12) 6px 12px); }
+
+/* Fortschrittsband im Start-Reiter */
+.meter-bar { height: 7px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 99px; overflow: hidden; }
+.meter-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width .35s ease; }
+@media (prefers-reduced-motion: reduce) { .meter-fill { transition: none; } }

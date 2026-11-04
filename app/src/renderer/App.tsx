@@ -16,8 +16,10 @@ import { Plan } from "./tabs/Plan";
 import { Follower } from "./tabs/Follower";
 import { Veroeffentlichen } from "./tabs/Veroeffentlichen";
 import { Tracking } from "./tabs/Tracking";
+import { Start } from "./tabs/Start";
 
 type TabId =
+  | "start"
   | "profil"
   | "post"
   | "meta"
@@ -35,6 +37,7 @@ type TabId =
   | "tracking";
 
 const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = [
+  { id: "start", label: "Start", icon: "◈" },
   { id: "post", label: "Post-Studio", icon: "◻", group: "Erstellen" },
   { id: "meta", label: "Meta Ads", icon: "◉" },
   { id: "google", label: "Google Ads", icon: "▲" },
@@ -53,7 +56,7 @@ const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = 
 ];
 
 export function App() {
-  const [tab, setTab] = useState<TabId>("post");
+  const [tab, setTab] = useState<TabId>("start");
   const [data, setData] = useState<AppData | null>(null);
   const [theme, setTheme] = useState<string>(() => localStorage.getItem("theme") ?? "dark");
 
@@ -121,6 +124,7 @@ export function App() {
 
       <main className="main">
         <div className="main-inner">
+          {tab === "start" && <Start data={data} refresh={refresh} go={(t) => setTab(t as TabId)} />}
           {tab === "post" && <PostStudio data={data} refresh={refresh} />}
           {tab === "meta" && <MetaAds data={data} refresh={refresh} />}
           {tab === "google" && <GoogleAds data={data} refresh={refresh} />}
