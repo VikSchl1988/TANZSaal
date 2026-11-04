@@ -16,6 +16,9 @@ const KIND_LABEL: Record<LibraryKind, string> = {
   kommentare: "Kommentare",
   follower: "Kontoanalyse",
   monatsplan: "Monatsplan",
+  bewertungen: "Bewertungen",
+  print: "Druck",
+  newsletter: "Newsletter",
 };
 
 const STATUS: Array<{ value: LibraryItem["status"]; label: string }> = [

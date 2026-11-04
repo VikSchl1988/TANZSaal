@@ -14,6 +14,9 @@ import {
   buildPmaxPrompt,
   buildCommentsPrompt,
   buildFollowerPrompt,
+  buildNewsletterPrompt,
+  buildPrintPrompt,
+  buildReviewsPrompt,
   buildMonthPlanPrompt,
   buildPostPrompt,
   buildStyleProfilePrompt,
@@ -23,6 +26,9 @@ import {
   type PostBrief,
   type CommentsBrief,
   type FollowerBrief,
+  type NewsletterBrief,
+  type PrintBrief,
+  type ReviewsBrief,
   type MonthPlanBrief,
   type StyleBrief,
 } from "../shared/prompts";
@@ -327,6 +333,16 @@ function registerIpc(): void {
       case "follower":
         user = buildFollowerPrompt(payload.brief as unknown as FollowerBrief);
         effort = "high";
+        break;
+      case "bewertungen":
+        user = buildReviewsPrompt(payload.brief as unknown as ReviewsBrief);
+        effort = "high";
+        break;
+      case "print":
+        user = buildPrintPrompt(payload.brief as unknown as PrintBrief);
+        break;
+      case "newsletter":
+        user = buildNewsletterPrompt(payload.brief as unknown as NewsletterBrief);
         break;
       case "monatsplan":
         user = buildMonthPlanPrompt(payload.brief as unknown as MonthPlanBrief, data.profile);

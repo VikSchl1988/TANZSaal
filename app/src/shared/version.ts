@@ -19,6 +19,17 @@ export interface Release {
 /** Neueste zuerst. */
 export const CHANGELOG: Release[] = [
   {
+    version: "1.2.0",
+    date: "2026-11-04",
+    changes: [
+      "Kampagne: ein Anlass, alle Kanäle — und ein Zeitplan, der rückwärts vom Kursstart rechnet. Claude schreibt alle Texte der Reihe nach und legt sie mit Termin im Plan ab.",
+      "Druck: Aushang, Flyer, Handzettel und Plakat, jeweils mit den Längen, die bei der Leseentfernung noch ankommen. Dazu die Pflichtangaben je Format.",
+      "Newsletter: Betreffzeilen zum Gegeneinandertesten, Vorschautext, Text und Nachsatz.",
+      "Bewertungen: Antwortentwürfe für Google und Facebook, mit der Regel, dass die Antwort der nächste Interessent liest — und einer Liste dessen, was mehrfach bemängelt wurde.",
+      "Prüfung des Systems: fremdes Werbematerial kann über das Stilprofil keine Anweisungen mehr in den Systemprompt tragen; das Fenster kann die eigene Oberfläche nicht mehr verlassen.",
+    ],
+  },
+  {
     version: "1.1.0",
     date: "2026-11-04",
     changes: [

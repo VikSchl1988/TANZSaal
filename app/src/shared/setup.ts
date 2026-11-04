@@ -176,6 +176,10 @@ export function assessSetup(input: SetupInput): SetupState {
   addTab("Meta Ads", textReady, !input.hasApiKey ? "kein Anthropic-Schlüssel" : "Profil unvollständig");
   addTab("Google Ads", textReady, !input.hasApiKey ? "kein Anthropic-Schlüssel" : "Profil unvollständig");
   addTab("Kommentare", textReady, !input.hasApiKey ? "kein Anthropic-Schlüssel" : "Profil unvollständig");
+  addTab("Bewertungen", textReady, !input.hasApiKey ? "kein Anthropic-Schlüssel" : "Profil unvollständig");
+  addTab("Druck", textReady, !input.hasApiKey ? "kein Anthropic-Schlüssel" : "Profil unvollständig");
+  addTab("Newsletter", textReady, !input.hasApiKey ? "kein Anthropic-Schlüssel" : "Profil unvollständig");
+  addTab("Kampagne", textReady, !input.hasApiKey ? "kein Anthropic-Schlüssel" : "Profil unvollständig");
   addTab("Vorbilder", input.hasMetaToken && input.hasApiKey, !input.hasMetaToken ? "kein Meta-Token" : "kein Anthropic-Schlüssel");
   addTab("PPC-Cockpit", valueSet, "deine Zahlen fehlen");
   addTab("Auswertung", valueSet, "ohne deine Zahlen bleibt die Ampel blind");

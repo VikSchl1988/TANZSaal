@@ -73,7 +73,10 @@ export type LibraryKind =
   | "stilprofil"
   | "kommentare"
   | "follower"
-  | "monatsplan";
+  | "monatsplan"
+  | "bewertungen"
+  | "print"
+  | "newsletter";
 
 export interface LibraryItem {
   id: string;
@@ -257,6 +260,55 @@ export interface MonthPlanResult {
   entries: MonthPlanEntry[];
   /** Verhaeltnis von verkaufenden zu nicht verkaufenden Beitraegen */
   ratio: string;
+  openQuestions: string[];
+}
+
+export interface ReviewReply {
+  author: string;
+  stars: number;
+  review: string;
+  /** lob, kritik, gemischt, unsachlich, frage */
+  category: string;
+  reply: string;
+  /** Erst offline klären, bevor öffentlich geantwortet wird */
+  takeOffline: boolean;
+  needsHuman: boolean;
+  reason: string;
+}
+
+export interface ReviewsResult {
+  replies: ReviewReply[];
+  /** Muster über alle Bewertungen hinweg — das ist der eigentliche Wert */
+  patterns: string[];
+  notes: string;
+}
+
+export interface PrintResult {
+  headline: string;
+  subline: string;
+  body: string;
+  /** Die harten Angaben: Termin, Ort, Preis, Anmeldung */
+  facts: string[];
+  cta: string;
+  /** Was aufs Bild soll */
+  visual: string;
+  /** Wohin der QR-Code führt */
+  qrTarget: string;
+  /** Pflichtangaben, die der Betrieb ergänzen muss */
+  duties: string[];
+  openQuestions: string[];
+}
+
+export interface NewsletterResult {
+  /** Mehrere Betreffzeilen zum Gegeneinandertesten */
+  subjects: string[];
+  preheader: string;
+  greeting: string;
+  body: string;
+  cta: { text: string; target: string };
+  ps: string;
+  /** Wem das zugeschickt werden soll */
+  audience: string;
   openQuestions: string[];
 }
 

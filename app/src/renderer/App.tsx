@@ -17,6 +17,10 @@ import { Follower } from "./tabs/Follower";
 import { Veroeffentlichen } from "./tabs/Veroeffentlichen";
 import { Tracking } from "./tabs/Tracking";
 import { Start } from "./tabs/Start";
+import { Bewertungen } from "./tabs/Bewertungen";
+import { Druck } from "./tabs/Druck";
+import { Newsletter } from "./tabs/Newsletter";
+import { Kampagne } from "./tabs/Kampagne";
 import { CURRENT } from "../shared/version";
 
 type TabId =
@@ -35,14 +39,22 @@ type TabId =
   | "plan"
   | "follower"
   | "veroeffentlichen"
-  | "tracking";
+  | "tracking"
+  | "bewertungen"
+  | "druck"
+  | "newsletter"
+  | "kampagne";
 
 const TABS: Array<{ id: TabId; label: string; icon: string; group?: string }> = [
   { id: "start", label: "Start", icon: "◈" },
-  { id: "post", label: "Post-Studio", icon: "◻", group: "Erstellen" },
+  { id: "kampagne", label: "Kampagne", icon: "✦", group: "Erstellen" },
+  { id: "post", label: "Post-Studio", icon: "◻" },
   { id: "meta", label: "Meta Ads", icon: "◉" },
   { id: "google", label: "Google Ads", icon: "▲" },
-  { id: "kommentare", label: "Kommentare", icon: "✉" },
+  { id: "druck", label: "Druck", icon: "▭" },
+  { id: "newsletter", label: "Newsletter", icon: "✉" },
+  { id: "kommentare", label: "Kommentare", icon: "◌" },
+  { id: "bewertungen", label: "Bewertungen", icon: "★" },
   { id: "veroeffentlichen", label: "Veröffentlichen", icon: "↑" },
   { id: "follower", label: "Follower", icon: "◍", group: "Lernen" },
   { id: "vorbilder", label: "Vorbilder", icon: "◎" },
@@ -137,7 +149,11 @@ export function App() {
       <main className="main">
         <div className="main-inner">
           {tab === "start" && <Start data={data} refresh={refresh} go={(t) => setTab(t as TabId)} />}
+          {tab === "kampagne" && <Kampagne data={data} refresh={refresh} go={(t) => setTab(t as TabId)} />}
           {tab === "post" && <PostStudio data={data} refresh={refresh} />}
+          {tab === "druck" && <Druck data={data} refresh={refresh} />}
+          {tab === "newsletter" && <Newsletter data={data} refresh={refresh} />}
+          {tab === "bewertungen" && <Bewertungen data={data} refresh={refresh} />}
           {tab === "meta" && <MetaAds data={data} refresh={refresh} />}
           {tab === "google" && <GoogleAds data={data} refresh={refresh} />}
           {tab === "vorbilder" && <Vorbilder data={data} refresh={refresh} />}

@@ -16,10 +16,13 @@ const KIND_LABEL: Record<LibraryKind, string> = {
   kommentare: "Kommentare",
   follower: "Kontoanalyse",
   monatsplan: "Monatsplan",
+  bewertungen: "Bewertungen",
+  print: "Druck",
+  newsletter: "Newsletter",
 };
 
 /** Nur was tatsächlich veröffentlicht wird, gehört in den Plan. */
-const PLANNABLE: LibraryKind[] = ["post", "meta", "google", "pmax"];
+const PLANNABLE: LibraryKind[] = ["post", "meta", "google", "pmax", "print", "newsletter"];
 
 const STATUS_LABEL: Record<LibraryItem["status"], string> = {
   entwurf: "Entwurf",
