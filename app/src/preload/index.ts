@@ -51,6 +51,10 @@ const api = {
   readTextFile: (): Promise<{ canceled: boolean; name?: string; contents?: string }> =>
     ipcRenderer.invoke("file:readText"),
 
+  backupExport: (): Promise<unknown> => ipcRenderer.invoke("backup:export"),
+  backupRead: (): Promise<unknown> => ipcRenderer.invoke("backup:read"),
+  backupApply: (): Promise<unknown> => ipcRenderer.invoke("backup:apply"),
+
   openExternal: (url: string): Promise<void> => ipcRenderer.invoke("shell:openExternal", url),
   appInfo: (): Promise<{ model: string; dataFile: string; version: string }> => ipcRenderer.invoke("app:info"),
 

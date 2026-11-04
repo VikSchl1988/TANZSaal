@@ -146,3 +146,14 @@ export function importProfileFromMarkdown(folder: string): { imported: string[];
   save({ ...data, profile: { ...profile, updatedAt: new Date().toISOString() } });
   return { imported, skipped };
 }
+
+/**
+ * Ersetzt den gesamten Bestand durch eine eingelesene Sicherung.
+ *
+ * save() legt vorher eine rollierende Sicherung des bisherigen Zustands an —
+ * wer sich vergreift, kommt also zurueck. Genau dafuer sind die Sicherungen
+ * im backups-Ordner da, und hier ist der Fall, in dem sie zaehlen.
+ */
+export function replaceAll(next: AppData): AppData {
+  return save({ ...next, version: EMPTY_APP_DATA.version });
+}

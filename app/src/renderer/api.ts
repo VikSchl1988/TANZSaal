@@ -12,6 +12,24 @@ export interface AdLibraryOutcome {
   hint?: string;
 }
 
+export interface BackupSummary {
+  businessName: string;
+  libraryItems: number;
+  spendEntries: number;
+  resultEntries: number;
+  reports: number;
+  generations: number;
+}
+
+export interface BackupReadOutcome {
+  canceled: boolean;
+  ok?: boolean;
+  error?: string;
+  warnings?: string[];
+  envelope?: { createdAt: string; appVersion: string; format: number; summary: BackupSummary };
+  path?: string;
+}
+
 export interface StudioApi {
   getData(): Promise<AppData>;
   saveProfile(profile: Profile): Promise<AppData>;
@@ -38,6 +56,9 @@ export interface StudioApi {
   importProfileMarkdown(): Promise<{ canceled: boolean; imported?: string[]; skipped?: string[] }>;
   exportFile(suggestedName: string, contents: string): Promise<{ canceled: boolean; path?: string }>;
   readTextFile(): Promise<{ canceled: boolean; name?: string; contents?: string }>;
+  backupExport(): Promise<{ canceled: boolean; path?: string; summary?: BackupSummary }>;
+  backupRead(): Promise<BackupReadOutcome>;
+  backupApply(): Promise<{ ok: boolean; error?: string; data?: AppData }>;
   openExternal(url: string): Promise<void>;
   appInfo(): Promise<{ model: string; dataFile: string; version: string }>;
   generate(kind: string, brief: Record<string, unknown>): Promise<GenerateResponse>;

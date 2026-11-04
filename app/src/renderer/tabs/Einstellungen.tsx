@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
 import type { TabProps } from "../tabprops";
-import { studio } from "../api";
-import { Card, Notice } from "../ui";
+import { studio, type BackupReadOutcome } from "../api";
+import { Card, Field, Notice, Pill } from "../ui";
+import { defaultExpiry, tokenState, type TokenStatus } from "../../shared/tokens";
 
-export function Einstellungen(_props: TabProps) {
+const TOKEN_PILL: Record<TokenStatus, "ok" | "warn" | "bad" | undefined> = {
+  gueltig: "ok",
+  laeuft_bald_ab: "warn",
+  abgelaufen: "bad",
+  unbekannt: undefined,
+};
+
+export function Einstellungen({ data, refresh }: TabProps) {
   const [hasKey, setHasKey] = useState(false);
   const [key, setKey] = useState("");
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
@@ -11,6 +19,11 @@ export function Einstellungen(_props: TabProps) {
   const [hasMeta, setHasMeta] = useState(false);
   const [metaToken, setMetaToken] = useState("");
   const [metaStatus, setMetaStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [expires, setExpires] = useState(data.settings.metaTokenExpires ?? "");
+  const [restore, setRestore] = useState<BackupReadOutcome | null>(null);
+  const [backupNote, setBackupNote] = useState<string | null>(null);
+
+  const tState = tokenState(data.settings.metaTokenExpires, hasMeta);
 
   useEffect(() => {
     void studio().hasApiKey().then(setHasKey);
@@ -128,6 +141,125 @@ export function Einstellungen(_props: TabProps) {
           Cent, eine Auswertung etwas darüber. Nach jeder Generierung zeigt das Studio den tatsächlichen Verbrauch an,
           damit du nicht schätzen musst.
         </p>
+      </Card>
+
+      <Card
+        title="Ablauf des Meta-Tokens"
+        hint="Ein langlebiges Token hält rund 60 Tage. Danach steht die Anbindung still."
+        right={<Pill kind={TOKEN_PILL[tState.status]}>{tState.headline}</Pill>}
+      >
+        <p className="hint">{tState.detail}</p>
+        <div className="row" style={{ marginTop: 14, alignItems: "flex-end" }}>
+          <div style={{ width: 200 }}>
+            <Field label="Läuft ab am" value={expires} onChange={setExpires} placeholder="2027-01-03" sub="Format JJJJ-MM-TT" />
+          </div>
+          <button
+            className="btn"
+            onClick={() => setExpires(defaultExpiry())}
+            title="Setzt das Datum auf 60 Tage ab heute"
+          >
+            60 Tage ab heute
+          </button>
+          <button
+            className="btn primary"
+            onClick={async () => {
+              await studio().saveSettings({ ...data.settings, metaTokenExpires: expires || undefined });
+              await refresh();
+            }}
+          >
+            Datum merken
+          </button>
+        </div>
+        <p className="hint-faint" style={{ marginTop: 10 }}>
+          Die 60 Tage sind eine Schätzung, kein ausgelesener Wert — die App kann das echte Datum erst abfragen, wenn
+          sie mit Metas Schnittstelle spricht. Steht in deinem Entwicklerbereich ein anderes Datum, gilt das.
+        </p>
+      </Card>
+
+      <Card
+        title="Sichern und wiederherstellen"
+        hint="Profil, Zahlen, Bibliothek, Ausgaben, Ergebnisse und Verlauf in einer Datei."
+      >
+        <div className="row">
+          <button
+            className="btn"
+            onClick={async () => {
+              const res = await studio().backupExport();
+              if (res.canceled) return;
+              setBackupNote(`Gesichert: ${res.path}`);
+            }}
+          >
+            Jetzt sichern
+          </button>
+          <button
+            className="btn"
+            onClick={async () => {
+              setBackupNote(null);
+              const res = await studio().backupRead();
+              if (res.canceled) return;
+              setRestore(res);
+            }}
+          >
+            Sicherung einlesen…
+          </button>
+        </div>
+        {backupNote && <p className="hint-faint" style={{ marginTop: 10, wordBreak: "break-all" }}>{backupNote}</p>}
+
+        <Notice title="Schlüssel sind absichtlich nicht enthalten">
+          Weder der Anthropic-Schlüssel noch das Meta-Token wandern in die Datei. Die liegen im Schlüsselbund, und
+          genau dort gehören sie hin — eine Sicherungsdatei landet in der Cloud, auf einem Stick oder im Mailanhang,
+          und ein Zugriffstoken hat an keinem dieser Orte etwas verloren. Nach dem Wiederherstellen trägst du beide
+          neu ein.
+        </Notice>
+
+        {restore && restore.ok === false && (
+          <Notice kind="bad" title="Diese Datei kann nicht eingelesen werden">
+            {restore.error}
+          </Notice>
+        )}
+
+        {restore && restore.ok && restore.envelope && (
+          <Notice kind="bad" title="Das überschreibt alles, was gerade in der App steht">
+            <p style={{ margin: "0 0 8px" }}>
+              <strong>{restore.envelope.summary.businessName || "Ohne Betriebsnamen"}</strong>, gesichert am{" "}
+              {new Date(restore.envelope.createdAt).toLocaleString("de-DE")} mit Version {restore.envelope.appVersion}.
+            </p>
+            <p className="hint" style={{ margin: "0 0 8px" }}>
+              {restore.envelope.summary.libraryItems} Einträge in der Bibliothek ·{" "}
+              {restore.envelope.summary.spendEntries} Ausgaben · {restore.envelope.summary.resultEntries} Ergebnisse ·{" "}
+              {restore.envelope.summary.reports} Berichte
+            </p>
+            <p className="hint" style={{ margin: "0 0 8px" }}>
+              Dein jetziger Stand wird vorher automatisch in den Sicherungsordner geschrieben — ein Fehlgriff ist also
+              nicht endgültig.
+            </p>
+            {(restore.warnings ?? []).map((w, i) => (
+              <p key={i} className="hint" style={{ color: "var(--warn)", margin: "0 0 6px" }}>
+                {w}
+              </p>
+            ))}
+            <div className="row" style={{ marginTop: 10 }}>
+              <button
+                className="btn primary"
+                onClick={async () => {
+                  const res = await studio().backupApply();
+                  setRestore(null);
+                  if (res.ok) {
+                    await refresh();
+                    setBackupNote("Sicherung übernommen. Schlüssel und Token musst du neu eintragen.");
+                  } else {
+                    setBackupNote(res.error ?? "Übernehmen fehlgeschlagen.");
+                  }
+                }}
+              >
+                Ja, übernehmen
+              </button>
+              <button className="btn" onClick={() => setRestore(null)}>
+                Abbrechen
+              </button>
+            </div>
+          </Notice>
+        )}
       </Card>
 
       <Card title="Daten und Modell">

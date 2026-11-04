@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { ClaudeError, extractJson, generate, MODEL } from "./claude";
@@ -30,8 +30,12 @@ import type { AppData, AppSettings, GenerateResponse, LibraryItem, Profile, Styl
 import type { ResultEntry, SpendEntry } from "../shared/costs";
 import type { ReportSnapshot } from "../shared/history";
 import { calculateBreakEven, recommendStructure } from "../shared/ppc";
+import { buildBackup, backupFileName, readBackup } from "../shared/backup";
 
 let mainWindow: BrowserWindow | null = null;
+
+/** Geprüfte, noch nicht uebernommene Sicherung. */
+let pendingRestore: AppData | null = null;
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -218,6 +222,55 @@ function registerIpc(): void {
 
   ipcMain.handle("shell:openExternal", (_e, url: string) => {
     if (typeof url === "string" && url.startsWith("https://")) void shell.openExternal(url);
+  });
+
+  ipcMain.handle("backup:export", async () => {
+    const data = store.load();
+    const envelope = buildBackup(data, app.getVersion());
+    const res = await dialog.showSaveDialog({
+      title: "Sicherung speichern",
+      defaultPath: backupFileName(data.profile.businessName),
+      filters: [{ name: "Sicherung", extensions: ["json"] }],
+    });
+    if (res.canceled || !res.filePath) return { canceled: true };
+    writeFileSync(res.filePath, JSON.stringify(envelope, null, 2), "utf8");
+    return { canceled: false, path: res.filePath, summary: envelope.summary };
+  });
+
+  // Zweistufig: erst lesen und zeigen, was drinsteht, dann auf ausdrueckliche
+  // Bestaetigung hin uebernehmen. Ein Fehlgriff hier loescht alles.
+  ipcMain.handle("backup:read", async () => {
+    const res = await dialog.showOpenDialog({
+      title: "Sicherung auswaehlen",
+      properties: ["openFile"],
+      filters: [{ name: "Sicherung", extensions: ["json"] }],
+    });
+    if (res.canceled || res.filePaths.length === 0) return { canceled: true };
+    const path = res.filePaths[0]!;
+    let text: string;
+    try {
+      text = readFileSync(path, "utf8");
+    } catch (err) {
+      return { canceled: false, ok: false, error: `Die Datei liess sich nicht lesen: ${(err as Error).message}` };
+    }
+    const parsed = readBackup(text);
+    pendingRestore = parsed.ok && parsed.data ? parsed.data : null;
+    return {
+      canceled: false,
+      ok: parsed.ok,
+      error: parsed.error,
+      warnings: parsed.warnings,
+      envelope: parsed.envelope ? { ...parsed.envelope, data: undefined } : undefined,
+      path,
+    };
+  });
+
+  ipcMain.handle("backup:apply", (): { ok: boolean; error?: string; data?: AppData } => {
+    if (!pendingRestore) return { ok: false, error: "Es liegt keine geprüfte Sicherung bereit. Waehle die Datei erneut aus." };
+    // Vor dem Ueberschreiben eine Sicherung des Jetzt-Zustands wegschreiben.
+    const data = store.replaceAll(pendingRestore);
+    pendingRestore = null;
+    return { ok: true, data };
   });
 
   ipcMain.handle("app:info", () => ({ model: MODEL, dataFile: store.dataFileLocation(), version: app.getVersion() }));

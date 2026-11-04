@@ -3,6 +3,7 @@ import type { TabProps } from "../tabprops";
 import { studio } from "../api";
 import { Card, Empty, Notice, Pill } from "../ui";
 import { assessSetup, STATUS_LABEL, type SetupStep } from "../../shared/setup";
+import { tokenState } from "../../shared/tokens";
 
 const STATUS_PILL: Record<SetupStep["status"], "ok" | "warn" | "bad" | undefined> = {
   fertig: "ok",
@@ -36,6 +37,7 @@ export function Start({ data, go }: TabProps) {
 
   // Solange die Schlüssel noch nicht gelesen sind, lieber nichts behaupten.
   const loading = hasApiKey === null || hasMeta === null;
+  const token = tokenState(data.settings.metaTokenExpires, hasMeta === true);
   const pct = Math.round((setup.done / setup.total) * 100);
 
   return (
@@ -50,6 +52,17 @@ export function Start({ data, go }: TabProps) {
         <Empty>Einrichtung wird geprüft…</Empty>
       ) : (
         <>
+          {(token.status === "abgelaufen" || token.status === "laeuft_bald_ab") && (
+            <Notice kind="bad" title={token.headline}>
+              <p style={{ margin: "0 0 10px" }}>{token.detail}</p>
+              {go && (
+                <button className="btn" onClick={() => go("einstellungen")}>
+                  Zu den Einstellungen
+                </button>
+              )}
+            </Notice>
+          )}
+
           {setup.next && (
             <Notice kind={setup.done === 0 ? "bad" : undefined} title={`Als Nächstes: ${setup.next.title}`}>
               <p style={{ margin: "0 0 8px" }}>{setup.next.todo ?? setup.next.why}</p>

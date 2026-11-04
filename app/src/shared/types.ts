@@ -112,6 +112,9 @@ export interface AppSettings {
   /** Umrechnungskurs Dollar in Euro fuer die Kostenrechnung. Selbst pflegen - ein
    *  fest verdrahteter Kurs waere eine falsche Zahl in einer Kostenrechnung. */
   usdToEur: number;
+  /** Wann das Meta-Token ablaeuft, als JJJJ-MM-TT. Eingetragen, nicht geraten:
+   *  auslesen kann die App es erst, wenn sie mit Metas Schnittstelle spricht. */
+  metaTokenExpires?: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = { usdToEur: 0.92 };
