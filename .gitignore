@@ -1,0 +1,15 @@
+# Nichts, was ein Geheimnis enthalten koennte, darf versehentlich im Repo landen.
+.env
+.env.*
+*.local
+secrets.json
+*-token.txt
+
+# Daten der App (liegen eigentlich im Benutzerordner, aber sicher ist sicher)
+werbe-studio.json
+werbe-studio.defekt-*.json
+backups/
+
+# Systemkram
+.DS_Store
+*.log
