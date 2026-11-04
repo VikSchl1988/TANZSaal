@@ -63,6 +63,19 @@ function createWindow(): void {
     return { action: "deny" };
   });
 
+  // Das Fenster darf die eigene Oberflaeche nie verlassen. Ohne diesen Riegel
+  // koennte ein Link oder eine Zeile Code die App auf eine fremde Seite
+  // schicken - und die Preload-Bruecke mit dem Zugang zu Schluessel und Token
+  // laeuft dort weiter. Ein Ziel, das der Nutzer wirklich sehen will, geht in
+  // den Browser.
+  mainWindow.webContents.on("will-navigate", (event, url) => {
+    const devServer = process.env.VITE_DEV_SERVER_URL;
+    const erlaubt = url.startsWith("file://") || (devServer ? url.startsWith(devServer) : false);
+    if (erlaubt) return;
+    event.preventDefault();
+    if (url.startsWith("https://")) void shell.openExternal(url);
+  });
+
   const devServer = process.env.VITE_DEV_SERVER_URL;
   if (devServer) {
     void mainWindow.loadURL(devServer);

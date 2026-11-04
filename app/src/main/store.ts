@@ -18,6 +18,18 @@ const backupDir = (): string => join(dataDir(), "backups");
 
 let cache: AppData | null = null;
 
+function isStyleProfile(value: unknown): value is AppData["styleProfile"] {
+  if (!value || typeof value !== "object") return false;
+  const v = value as Record<string, unknown>;
+  return (
+    Array.isArray(v.patterns) &&
+    Array.isArray(v.hooks) &&
+    Array.isArray(v.gaps) &&
+    Array.isArray(v.avoid) &&
+    Array.isArray(v.ideas)
+  );
+}
+
 export function load(): AppData {
   if (cache) return cache;
   const file = dataFile();
@@ -38,6 +50,9 @@ export function load(): AppData {
       spend: Array.isArray(parsed.spend) ? parsed.spend : [],
       results: Array.isArray(parsed.results) ? parsed.results : [],
       reportHistory: Array.isArray(parsed.reportHistory) ? parsed.reportHistory : [],
+      // Das Stilprofil entsteht aus fremdem Werbematerial. Ist es nicht die
+      // erwartete Form, wird es verworfen statt in jeden Prompt getragen.
+      styleProfile: isStyleProfile(parsed.styleProfile) ? parsed.styleProfile : null,
       settings: { ...EMPTY_APP_DATA.settings, ...(parsed.settings ?? {}) },
     };
     return cache;
